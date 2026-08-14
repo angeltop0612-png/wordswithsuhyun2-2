@@ -3,690 +3,1243 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>메타인지 어원 단어장 (중등 고난도 1~8강)</title>
+    <title>어원 기반 모바일 단어장 (1~10강)</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Noto Sans KR', 'sans-serif'],
+                        eng: ['Poppins', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#4F46E5',
+                        secondary: '#10B981',
+                        danger: '#EF4444',
+                        surface: '#F9FAFB',
+                        card: '#FFFFFF'
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        /* 기본 폰트 및 앱 스타일 */
-        @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800&display=swap');
-        body { font-family: 'Pretendard', sans-serif; background-color: #f8fafc; overflow: hidden; }
+        body {
+            background-color: #e5e7eb;
+            -webkit-tap-highlight-color: transparent;
+            overscroll-behavior-y: none;
+        }
         
-        /* 스크롤바 커스텀 */
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
-
-        /* 아코디언 애니메이션 */
-        .accordion-content { transition: max-height 0.3s ease-in-out, padding 0.3s ease-in-out, opacity 0.3s ease-in-out; max-height: 0; opacity: 0; overflow: hidden; }
-        .accordion-content.open { max-height: 400px; opacity: 1; padding-top: 1rem; padding-bottom: 1rem; }
-        
-        /* 플래시카드 3D 애니메이션 */
-        .perspective-1000 { perspective: 1000px; }
-        .transform-style-3d { transform-style: preserve-3d; }
-        .backface-hidden { backface-visibility: hidden; }
-        .rotate-y-180 { transform: rotateY(180deg); }
-        .flip-card-inner { transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1); }
-
-        /* 모바일 사이드바 트랜지션 */
-        #sidebar { transition: transform 0.3s ease-in-out; }
-        @media (max-width: 768px) {
-            #sidebar { transform: translateX(-100%); }
-            #sidebar.open { transform: translateX(0); }
+        .app-container {
+            max-width: 480px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            min-height: 100vh;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            position: relative;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
         }
 
-        /* 활성화된 사이드바 메뉴 스타일 */
-        .menu-item.active { background-color: #eff6ff; color: #3b82f6; border-right: 4px solid #3b82f6; font-weight: 700; }
+        .view {
+            display: none;
+            flex: 1;
+            flex-direction: column;
+            animation: fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .view.active { display: flex; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .flashcard-container {
+            perspective: 1200px;
+            width: 100%;
+            height: 380px;
+        }
+        .flashcard {
+            width: 100%;
+            height: 100%;
+            transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+            transform-style: preserve-3d;
+            cursor: pointer;
+            position: relative;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            border-radius: 1.5rem;
+        }
+        .flashcard.is-flipped { transform: rotateY(180deg); }
+        
+        .flashcard-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 1.5rem;
+            padding: 2rem;
+            text-align: center;
+        }
+        .flashcard-front { background-color: #ffffff; border: 2px solid #E5E7EB; }
+        .flashcard-back { background-color: #F8FAFC; border: 2px solid #4F46E5; transform: rotateY(180deg); }
+
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        .floating-btn {
+            position: sticky;
+            bottom: 20px;
+            width: calc(100% - 32px);
+            margin: 0 auto;
+            z-index: 40;
+        }
     </style>
 </head>
-<body class="flex h-screen w-full relative text-slate-800">
+<body>
 
-    <!-- 모바일 사이드바 오버레이 -->
-    <div id="sidebarOverlay" class="fixed inset-0 bg-slate-900 bg-opacity-50 z-40 hidden md:hidden" onclick="toggleSidebar()"></div>
-
-    <!-- 왼쪽 사이드바 (메뉴) -->
-    <aside id="sidebar" class="fixed md:static inset-y-0 left-0 w-64 bg-white border-r border-slate-200 z-50 flex flex-col h-full shadow-2xl md:shadow-none flex-shrink-0">
-        <!-- 사이드바 헤더 -->
-        <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-            <h1 class="text-lg font-black text-slate-800 tracking-tight"><i class="fa-solid fa-graduation-cap text-blue-600 mr-2"></i>통합 단어장</h1>
-            <button onclick="toggleSidebar()" class="md:hidden text-slate-500 hover:text-slate-800"><i class="fa-solid fa-xmark text-xl"></i></button>
-        </div>
-        
-        <!-- 사이드바 메뉴 리스트 -->
-        <div class="flex-1 overflow-y-auto py-4" id="menuContainer">
-            <!-- JS 렌더링 영역 -->
-        </div>
-    </aside>
-
-    <!-- 오른쪽 메인 콘텐츠 영역 -->
-    <main class="flex-1 flex flex-col h-full relative min-w-0">
-        
-        <!-- 상단 앱 헤더 -->
-        <header class="bg-blue-600 text-white p-4 flex justify-between items-center shadow-md z-20">
-            <div class="flex items-center">
-                <!-- 햄버거 메뉴 -->
-                <button onclick="toggleSidebar()" class="md:hidden mr-4 text-white hover:text-blue-200 transition">
-                    <i class="fa-solid fa-bars text-xl"></i>
-                </button>
-                <div>
-                    <h2 id="currentLessonTitle" class="text-lg font-bold">학습할 단원을 선택하세요</h2>
-                    <p id="currentBookTitle" class="text-xs text-blue-200 mt-0.5">왼쪽 메뉴를 열어주세요</p>
-                </div>
-            </div>
-            <!-- 카드 모드 토글 -->
-            <button onclick="toggleFlashcardMode()" id="modeToggleBtn" class="bg-blue-800 bg-opacity-50 text-white px-3 py-1.5 rounded-full text-sm font-semibold shadow-sm hover:bg-blue-700 transition hidden">
-                <i class="fa-solid fa-clone mr-1"></i> 카드모드
+    <div class="app-container" id="app">
+        <header class="bg-gradient-to-r from-primary to-indigo-600 text-white p-4 sticky top-0 z-50 flex items-center shadow-md">
+            <button id="btn-back" onclick="goBack()" style="display: none;" class="mr-4 text-xl focus:outline-none w-10 h-10 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 transition active:scale-95 z-50">
+                <i class="fas fa-arrow-left pointer-events-none"></i>
             </button>
+            <h1 id="header-title" class="text-xl font-bold font-eng tracking-wide flex-1 text-center truncate">RootVoca <span class="text-sm font-normal text-indigo-200">고난도 완결</span></h1>
+            <div class="w-10" id="header-spacer" style="display: none;"></div>
         </header>
 
-        <!-- 리스트 뷰 영역 -->
-        <div id="listView" class="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-50 space-y-4 pb-24">
-            <!-- 초기 안내 화면 -->
-            <div class="flex flex-col items-center justify-center h-full text-slate-400">
-                <i class="fa-solid fa-book-open text-6xl mb-4 text-slate-200"></i>
-                <p class="font-medium text-lg">사이드바에서 단원을 선택해주세요.</p>
+        <main id="view-home" class="view active overflow-y-auto hide-scrollbar p-5 pb-20 bg-surface">
+            <div class="mb-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">학습하기</h2>
+                <p class="text-gray-500 text-sm">원하는 강의를 선택하세요. 모든 단어가 어원 기반으로 분류되어 있습니다.</p>
             </div>
-        </div>
+            <div id="lesson-list" class="space-y-4">
+                <!-- JavaScript will populate this -->
+            </div>
+        </main>
 
-        <!-- 플래시카드 뷰 영역 -->
-        <div id="flashcardView" class="hidden absolute inset-0 bg-slate-900 bg-opacity-95 z-30 flex-col pb-10 pt-16">
-            <!-- 플래시카드 헤더 -->
-            <div class="flex justify-between items-center px-6 pb-4 text-white">
-                <span id="flashcardCounter" class="text-sm font-bold bg-slate-800 px-4 py-1.5 rounded-full border border-slate-600 text-blue-300 shadow-inner">0 / 0</span>
-                <button onclick="toggleFlashcardMode()" class="text-slate-400 hover:text-white transition transform hover:rotate-90"><i class="fa-solid fa-xmark text-3xl"></i></button>
+        <main id="view-lesson" class="view overflow-y-auto hide-scrollbar p-5 pb-24 bg-surface">
+            <div class="mb-4 flex justify-between items-end">
+                <div>
+                    <h2 id="lesson-title-display" class="text-2xl font-bold text-gray-800">1강</h2>
+                    <p id="lesson-word-count" class="text-gray-500 text-sm mt-1">총 0단어</p>
+                </div>
+            </div>
+            
+            <div id="root-groups-list" class="space-y-6 mb-8">
+                <!-- JavaScript will populate this -->
             </div>
 
-            <!-- 카드 본체 -->
-            <div class="flex-1 flex items-center justify-center p-6 w-full perspective-1000">
-                <div id="flashcard" class="w-full h-[65vh] max-w-sm relative transform-style-3d flip-card-inner cursor-pointer" onclick="flipCard()">
-                    
-                    <!-- 앞면 (단어) -->
-                    <div class="absolute inset-0 w-full h-full bg-white rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] backface-hidden flex flex-col justify-center items-center p-8 text-center border-b-8 border-blue-500">
-                        <span id="cardGroup" class="absolute top-6 text-xs font-bold text-blue-600 bg-blue-100 px-3 py-1 rounded-full">그룹</span>
-                        <h2 id="cardWord" class="text-4xl font-black text-slate-800 mb-4 tracking-tight break-words">Word</h2>
-                        <p class="text-slate-400 text-sm mt-8 font-semibold animate-pulse"><i class="fa-solid fa-hand-pointer mr-2"></i>탭하여 뜻/어원 확인</p>
-                    </div>
+            <div class="floating-btn">
+                <button id="btn-start-test" class="w-full bg-primary text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:bg-indigo-700 transition flex justify-center items-center">
+                    <i class="fas fa-play mr-2"></i> 이 강의 테스트 시작
+                </button>
+            </div>
+        </main>
 
-                    <!-- 뒷면 (뜻, 어원, 동계어) -->
-                    <div class="absolute inset-0 w-full h-full bg-slate-800 rounded-3xl shadow-2xl backface-hidden rotate-y-180 flex flex-col p-6 text-white overflow-y-auto border border-slate-700">
-                        <h2 id="cardWordBack" class="text-2xl font-bold mb-3 border-b border-slate-600 pb-2 text-blue-300">Word</h2>
-                        <p id="cardMeaning" class="text-xl font-black mb-4 text-white">의미</p>
-                        
-                        <div class="bg-slate-900 bg-opacity-80 rounded-xl p-4 shadow-inner mb-3">
-                            <p class="text-[0.7rem] text-emerald-400 mb-1 font-bold uppercase tracking-wider"><i class="fa-solid fa-seedling mr-1"></i> 메타인지 어원</p>
-                            <p id="cardRoot" class="text-[0.85rem] leading-relaxed text-slate-300 font-medium break-keep">어원 설명</p>
+        <main id="view-test" class="view flex-col p-5 bg-gray-50">
+            <div class="flex justify-between items-center mb-8 bg-white p-3 rounded-2xl shadow-sm border border-gray-100">
+                <div class="w-full bg-gray-200 rounded-full h-3 mr-4 overflow-hidden">
+                    <div id="test-progress-bar" class="bg-primary h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+                <span id="test-progress-text" class="text-sm font-bold text-gray-600 whitespace-nowrap">0 / 0</span>
+            </div>
+
+            <div class="flex-1 flex flex-col justify-center items-center mb-8">
+                <div class="flashcard-container" onclick="flipCard()">
+                    <div id="flashcard" class="flashcard">
+                        <div class="flashcard-face flashcard-front">
+                            <div class="w-12 h-12 rounded-full bg-indigo-50 flex items-center justify-center mb-6">
+                                <i class="fas fa-sync-alt text-primary opacity-50"></i>
+                            </div>
+                            <h2 id="card-en" class="text-4xl font-bold text-gray-800 font-eng mb-4 text-center">Word</h2>
+                            <p class="text-sm text-gray-400 mt-4">터치하여 뒤집기</p>
                         </div>
-
-                        <div class="bg-slate-900 bg-opacity-80 rounded-xl p-4 shadow-inner">
-                            <p class="text-[0.7rem] text-blue-400 mb-1 font-bold uppercase tracking-wider"><i class="fa-solid fa-link mr-1"></i> 동계어 (Family)</p>
-                            <p id="cardCognates" class="text-[0.85rem] font-medium text-slate-400">동계어</p>
+                        <div class="flashcard-face flashcard-back overflow-y-auto hide-scrollbar flex justify-start items-start pt-8 pb-4">
+                            <div class="w-full flex flex-col items-center justify-center min-h-full">
+                                <h2 id="card-ko" class="text-3xl font-bold text-primary mb-6 break-keep text-center w-full">뜻</h2>
+                                <div class="w-full space-y-3">
+                                    <div class="w-full p-3 bg-indigo-50 rounded-xl border border-indigo-100 text-left">
+                                        <p class="text-[11px] text-indigo-500 font-bold mb-1 uppercase tracking-wider flex items-center"><i class="fas fa-history mr-1.5"></i>어원 (Etymology)</p>
+                                        <p id="card-ety" class="text-sm text-gray-700 font-medium leading-relaxed"></p>
+                                    </div>
+                                    <div class="w-full p-3 bg-emerald-50 rounded-xl border border-emerald-100 text-left">
+                                        <p class="text-[11px] text-emerald-600 font-bold mb-1 uppercase tracking-wider flex items-center"><i class="fas fa-project-diagram mr-1.5"></i>동계어 (Cognate)</p>
+                                        <p id="card-cog" class="text-sm text-gray-700 font-medium leading-relaxed"></p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- 네비게이션 버튼 -->
-            <div class="flex justify-center items-center space-x-8 px-6 pb-4">
-                <button onclick="prevCard()" class="w-16 h-16 rounded-full bg-slate-700 text-white flex justify-center items-center active:bg-slate-600 hover:bg-slate-600 transition border border-slate-600 shadow-lg">
-                    <i class="fa-solid fa-chevron-left text-2xl"></i>
+            <div class="grid grid-cols-2 gap-4 pb-4" id="test-controls" style="opacity: 0.4; pointer-events: none;">
+                <button onclick="handleAnswer(false)" class="bg-white border-2 border-danger text-danger py-4 rounded-xl font-bold text-lg shadow-sm active:bg-red-50 flex items-center justify-center transition">
+                    <i class="fas fa-times mr-2"></i> 몰라요
                 </button>
-                <button onclick="nextCard()" class="w-16 h-16 rounded-full bg-blue-600 text-white flex justify-center items-center active:bg-blue-500 hover:bg-blue-500 transition shadow-[0_0_20px_rgba(37,99,235,0.4)] font-bold">
-                    <i class="fa-solid fa-chevron-right text-2xl"></i>
+                <button onclick="handleAnswer(true)" class="bg-white border-2 border-secondary text-secondary py-4 rounded-xl font-bold text-lg shadow-sm active:bg-green-50 flex items-center justify-center transition">
+                    <i class="fas fa-circle mr-2 text-[10px]"></i> 알아요
                 </button>
             </div>
+            <p class="text-center text-xs text-gray-400 pb-2">카드를 뒤집으면 버튼이 활성화됩니다.</p>
+        </main>
+
+        <main id="view-result" class="view p-6 flex-col justify-center items-center text-center bg-white">
+            <div class="w-24 h-24 bg-gradient-to-br from-indigo-100 to-primary/20 rounded-full flex items-center justify-center mb-6 shadow-inner">
+                <i class="fas fa-trophy text-5xl text-primary drop-shadow-md"></i>
+            </div>
+            <h2 class="text-3xl font-bold text-gray-800 mb-2">학습 완료!</h2>
+            <p class="text-gray-500 mb-8">이번 강의의 결과를 확인하세요.</p>
+            
+            <div class="w-full bg-surface p-6 rounded-2xl mb-8 flex justify-around border border-gray-100 shadow-sm">
+                <div class="text-center">
+                    <p class="text-sm text-gray-500 mb-2 font-medium">알아요</p>
+                    <p id="result-correct" class="text-4xl font-bold text-secondary">0</p>
+                </div>
+                <div class="w-px bg-gray-200"></div>
+                <div class="text-center">
+                    <p class="text-sm text-gray-500 mb-2 font-medium">몰라요</p>
+                    <p id="result-incorrect" class="text-4xl font-bold text-danger">0</p>
+                </div>
+            </div>
+
+            <button onclick="goHome()" class="w-full bg-primary text-white py-4 rounded-xl font-bold text-lg shadow-md hover:bg-indigo-700 transition mb-3">
+                다른 강의 학습하기
+            </button>
+            <button onclick="retryTest()" class="w-full bg-white border-2 border-gray-200 text-gray-700 py-4 rounded-xl font-bold text-lg shadow-sm hover:bg-gray-50 transition">
+                틀린 단어만 다시 하기
+            </button>
+        </main>
+
+        <!-- 커스텀 모달 (테스트 종료 확인) -->
+        <div id="modal-confirm" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 hidden opacity-0 transition-opacity duration-300">
+            <div class="bg-white rounded-2xl p-6 w-11/12 max-w-sm shadow-xl transform scale-95 transition-transform duration-300">
+                <h3 class="text-xl font-bold text-gray-800 mb-2">테스트 종료</h3>
+                <p class="text-gray-600 mb-6 text-sm">테스트를 중단하고 목록으로 돌아가시겠습니까?<br>진행 상황이 초기화됩니다.</p>
+                <div class="flex space-x-3">
+                    <button onclick="closeModal()" class="flex-1 py-3 rounded-xl bg-gray-100 text-gray-700 font-bold hover:bg-gray-200 transition">취소</button>
+                    <button onclick="confirmExit()" class="flex-1 py-3 rounded-xl bg-danger text-white font-bold hover:bg-red-600 transition shadow-md shadow-red-200">나가기</button>
+                </div>
+            </div>
         </div>
-    </main>
+
+        <!-- 커스텀 알림 모달 -->
+        <div id="modal-alert" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 hidden opacity-0 transition-opacity duration-300">
+            <div class="bg-white rounded-2xl p-6 w-11/12 max-w-sm shadow-xl transform scale-95 transition-transform duration-300 text-center">
+                <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-check text-2xl text-green-500"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-800 mb-2">완벽합니다!</h3>
+                <p class="text-gray-600 mb-6 text-sm">틀린 단어가 없습니다.</p>
+                <button onclick="closeAlertModal()" class="w-full py-3 rounded-xl bg-primary text-white font-bold hover:bg-indigo-700 transition">확인</button>
+            </div>
+        </div>
+    </div>
 
     <script>
-        // -------------------------------------------------------------
-        // 통합 데이터베이스 (중등 고난도 1~8강)
-        // -------------------------------------------------------------
-        const database = {
-            "중등 고난도": {
-                "1강 (가족/관계)": [
-                    { word: "lifespan", meaning: "일생, 생애", root: "life(생명) + span(뼘, 길이) → 생명이 지속되는 길이.", cognates: "span(기간, 폭)", group: "생애와 관계" },
-                    { word: "daycare center", meaning: "탁아소, 보육원", root: "day(낮) + care(돌봄) + center(중심) → 낮 동안 돌봐주는 곳.", cognates: "careful(조심하는)", group: "생애와 관계" },
-                    { word: "act", meaning: "행동하다, 처신하다", root: "agere(행하다, 움직이다).", cognates: "action(행동), active(활동적인)", group: "행동과 태도" },
-                    { word: "communication", meaning: "연락, 의사소통", root: "com(함께) + mun(의무, 선물) → 함께 나누고 교환하는 것.", cognates: "community(공동체)", group: "생애와 관계" },
-                    { word: "be engaged in", meaning: "~에 종사하다", root: "en(안에) + gage(서약하다) → 어떤 일에 매여 있는 상태.", cognates: "engage(약혼하다, 관여하다)", group: "행동과 태도" },
-                    { word: "resemblance", meaning: "닮은 점, 유사점", root: "re(다시) + sembler(보이다) → 다시 보아도 비슷하게 보임.", cognates: "resemble(~와 닮다)", group: "생애와 관계" },
-                    { word: "raise", meaning: "~을 기르다, 양육하다", root: "고대 노르드어 reisa (들어 올리다) → 아이가 자라도록 위로 끌어올림.", cognates: "rise(오르다)", group: "생애와 관계" },
-                    { word: "destiny", meaning: "운명, 숙명", root: "de(완전히) + stinare(세우다) → 완전히 확고하게 정해져 세워진 것.", cognates: "destination(목적지)", group: "생애와 관계" },
-                    { word: "interact with", meaning: "~와 상호 작용을 하다", root: "inter(서로, 사이에) + act(행동하다).", cognates: "interaction(상호작용)", group: "행동과 태도" },
-                    { word: "nephew", meaning: "조카 (아들)", root: "라틴어 nepos (손자, 조카).", cognates: "nepotism(족벌주의)", group: "생애와 관계" },
-                    { word: "treatment", meaning: "취급; 치료", root: "tractare(끌다, 다루다) + ment.", cognates: "treat(다루다), retreat(후퇴하다)", group: "행동과 태도" },
-                    { word: "pregnancy", meaning: "임신", root: "pre(이전에) + gnasci(태어나다) → 출산 이전의 상태.", cognates: "pregnant(임신한)", group: "생애와 관계" },
-                    { word: "obedience", meaning: "복종", root: "ob(~을 향해) + audire(듣다) → 향해서 귀 기울여 듣고 따름.", cognates: "obedient(순종적인), audio(소리)", group: "행동과 태도" },
-                    { word: "support", meaning: "지지하다, 옹호하다; 지지", root: "sub(아래에서) + port(나르다) → 아래에서 떠받치다.", cognates: "export(수출하다)", group: "행동과 태도" },
-                    { word: "parent", meaning: "부모", root: "parere(낳다) → 아이를 낳은 사람.", cognates: "parental(부모의)", group: "생애와 관계" },
-                    { word: "marriage partner", meaning: "배우자", root: "marry(결혼하다) + partner(동반자).", cognates: "marry(결혼하다)", group: "생애와 관계" },
-                    { word: "behavior", meaning: "행동", root: "be(강조) + have(가지다) → 어떤 태도를 가지고 행동함.", cognates: "behave(행동하다)", group: "행동과 태도" },
-                    { word: "fatal", meaning: "치명적인; 운명의", root: "fatum(운명) + al → 죽음이라는 피할 수 없는 운명을 가져오는.", cognates: "fate(운명)", group: "생애와 관계" },
-                    { word: "disobedient", meaning: "반항적인", root: "dis(반대) + obedient(순종적인).", cognates: "disobey(불복종하다)", group: "행동과 태도" },
-                    { word: "immature", meaning: "미숙한, 미발달의", root: "im(아닌) + mature(성숙한).", cognates: "mature(성숙한)", group: "생애와 관계" },
-                    { word: "come into contact with", meaning: "~와 접촉하다", root: "con(함께) + tact(만지다) → 함께 닿다.", cognates: "contact(접촉)", group: "행동과 태도" },
-                    { word: "advice", meaning: "충고", root: "ad(~쪽으로) + vis(보다) → 상대방 쪽을 보고 의견을 말해줌.", cognates: "advise(충고하다)", group: "행동과 태도" },
-                    { word: "older", meaning: "나이가 위인", root: "old(나이든)의 비교급.", cognates: "old(늙은)", group: "생애와 관계" },
-                    { word: "commemorate", meaning: "기념하다", root: "com(함께) + memor(기억하다) → 다 함께 기억하고 축하하다.", cognates: "memory(기억)", group: "생애와 관계" },
-                    { word: "interaction", meaning: "상호 작용", root: "inter(서로) + action(행동).", cognates: "interact(상호작용하다)", group: "행동과 태도" },
-                    { word: "senior", meaning: "연장자, 선배", root: "라틴어 senex(늙은)의 비교급 → 더 나이 든 사람.", cognates: "senate(상원)", group: "생애와 관계" },
-                    { word: "escort", meaning: "동행하다", root: "ex(밖으로) + corrigere(올바르게 하다) → 밖에서 길을 올바르게 안내하다.", cognates: "-", group: "행동과 태도" },
-                    { word: "celebration", meaning: "기념, 축하", root: "celebrare(사람이 많이 모이다) → 모여서 축하함.", cognates: "celebrate(축하하다)", group: "생애와 관계" },
-                    { word: "bring up", meaning: "양육하다, 키우다", root: "bring(가져오다) + up(위로) → 아이를 위로(크게) 끌어올림.", cognates: "-", group: "생애와 관계" },
-                    { word: "engagement", meaning: "약혼; 약속", root: "engage(약속하다) + ment.", cognates: "engage(약혼하다)", group: "생애와 관계" },
-                    { word: "bond", meaning: "관계, 유대", root: "bind(묶다)의 명사형 → 묶여 있는 상태.", cognates: "bind(묶다)", group: "생애와 관계" },
-                    { word: "take after", meaning: "~와 닮다", root: "take(취하다) + after(뒤를 이어) → 조상의 특징을 뒤이어 취하다.", cognates: "-", group: "생애와 관계" },
-                    { word: "deal with", meaning: "다루다, 대우하다", root: "deal(나누다, 거래하다) + with.", cognates: "deal(거래)", group: "행동과 태도" },
-                    { word: "touch", meaning: "접촉", root: "고대 프랑스어 tochier(치다, 만지다).", cognates: "touching(감동적인)", group: "행동과 태도" }
-                ],
-                "2강 (성격/외모)": [
-                    { word: "brilliant idea", meaning: "훌륭한 생각", root: "brillare(빛나다) → 머릿속에서 반짝이는 생각.", cognates: "brilliant(빛나는)", group: "성격과 태도" },
-                    { word: "arrogance", meaning: "오만, 거만", root: "ad(~에게) + rogare(요구하다) → 남에게 당연하듯 요구하는 무례한 태도.", cognates: "arrogant(거만한)", group: "성격과 태도" },
-                    { word: "form", meaning: "모양, 꼴", root: "forma(형태).", cognates: "formal(공식적인)", group: "외모와 형태" },
-                    { word: "elegance", meaning: "우아함", root: "e(밖으로) + legere(고르다) → 세심하게 골라낸 듯한 품격.", cognates: "elegant(우아한)", group: "성격과 태도" },
-                    { word: "activity", meaning: "활동", root: "act(행동하다) + ivity.", cognates: "active(활동적인)", group: "성격과 태도" },
-                    { word: "passive", meaning: "소극적인, 수동적인", root: "pati(고통받다, 인내하다) → 스스로 행동하지 않고 참는.", cognates: "passion(열정 - 인내하는 마음에서 파생)", group: "성격과 태도" },
-                    { word: "lively", meaning: "적극적인, 생기 넘치는", root: "live(살다) + ly → 살아있는 것처럼 활기찬.", cognates: "alive(살아있는)", group: "성격과 태도" },
-                    { word: "lazy", meaning: "게으른", root: "고대 프랑스어 lasche(나른한).", cognates: "-", group: "성격과 태도" },
-                    { word: "individuality", meaning: "개성", root: "in(나눌 수 없는) + divid(나누다) → 나뉠 수 없는 고유한 특성.", cognates: "individual(개인의)", group: "성격과 태도" },
-                    { word: "impatience", meaning: "성급함", root: "im(아닌) + patience(인내).", cognates: "patient(참을성 있는)", group: "성격과 태도" },
-                    { word: "boldness", meaning: "배짱, 대담함", root: "bold(대담한) + ness.", cognates: "bold(대담한)", group: "성격과 태도" },
-                    { word: "glittering", meaning: "빛나는", root: "glit(빛나다, 반짝이다).", cognates: "glitter(반짝이다)", group: "외모와 형태" },
-                    { word: "egg-shaped", meaning: "타원형의", root: "egg(달걀) + shaped(모양의).", cognates: "-", group: "외모와 형태" },
-                    { word: "charming", meaning: "매력적인", root: "charm(매력, 마법) + ing → 마법에 걸린 듯 마음을 끄는.", cognates: "charm(매력)", group: "외모와 형태" },
-                    { word: "positive", meaning: "자신만만한, 긍정적인", root: "ponere(놓다) → 확고하게 자리를 잡고 있는.", cognates: "position(위치)", group: "성격과 태도" },
-                    { word: "attract", meaning: "끌어당기다, 매혹하다", root: "ad(~로) + tract(끌다).", cognates: "attractive(매력적인)", group: "성격과 태도" },
-                    { word: "impatiently", meaning: "성급하게", root: "im(부정) + patient(참는) + ly.", cognates: "patient(환자, 참는)", group: "성격과 태도" },
-                    { word: "fierce pain", meaning: "격렬한 고통", root: "ferus(야생의, 사나운) → 짐승처럼 사나운 고통.", cognates: "fierce(사나운)", group: "성격과 태도" },
-                    { word: "confidence", meaning: "자신감", root: "con(완전히) + fid(믿다) → 스스로를 완전히 믿음.", cognates: "confident(자신 있는)", group: "성격과 태도" },
-                    { word: "type", meaning: "종류, 유형", root: "typos(도장을 찍은 자국) → 찍어낸 듯 비슷한 무리.", cognates: "typical(전형적인)", group: "외모와 형태" },
-                    { word: "appear", meaning: "나타나다, 보이다", root: "ad(~에게) + parere(나타나다).", cognates: "appearance(외모)", group: "외모와 형태" },
-                    { word: "appealing", meaning: "매력적인", root: "ad(~에게) + pellere(밀다) → 마음을 밀어내는(호소하는).", cognates: "appeal(호소하다)", group: "외모와 형태" },
-                    { word: "look", meaning: "외관, 겉모습", root: "고대 영어 locian(보다).", cognates: "-", group: "외모와 형태" },
-                    { word: "greedy", meaning: "탐욕스러운", root: "고대 영어 grædig(배고픈, 탐욕스러운).", cognates: "greed(탐욕)", group: "성격과 태도" },
-                    { word: "brow", meaning: "이마, 눈썹", root: "고대 영어 bru.", cognates: "eyebrow(눈썹)", group: "외모와 형태" },
-                    { word: "haughty", meaning: "거만한", root: "haut(높은) → 자신을 남보다 높게 여기는.", cognates: "-", group: "성격과 태도" },
-                    { word: "crease", 매: "주름", meaning: "주름지게 하다", root: "라틴어 crista(볏, 주름).", cognates: "crest(산마루)", group: "외모와 형태" },
-                    { word: "aggression", meaning: "공격", root: "ad(~로) + gress(가다) → 남을 향해 위협적으로 다가가다.", cognates: "aggressive(공격적인)", group: "성격과 태도" },
-                    { word: "uninformed", meaning: "모르는", root: "un(부정) + inform(정보를 주다) + ed.", cognates: "inform(알리다)", group: "성격과 태도" },
-                    { word: "intelligent", meaning: "총명한", root: "inter(사이에) + legere(고르다) → 여러 개 중 좋은 것을 골라내는 지능.", cognates: "intelligence(지능)", group: "성격과 태도" },
-                    { word: "resemble", meaning: "~을 닮다", root: "re(다시) + sembler(보이다).", cognates: "resemblance(유사점)", group: "외모와 형태" },
-                    { word: "able", meaning: "유능한", root: "habere(가지다) → 능력을 쥐고 있는.", cognates: "ability(능력)", group: "성격과 태도" },
-                    { word: "daring", meaning: "대담한", root: "dare(감히 ~하다) + ing.", cognates: "dare(감히 ~하다)", group: "성격과 태도" },
-                    { word: "incapable", meaning: "~할 수 없는", root: "in(부정) + cap(잡다) + able → 기회를 잡을 능력이 없는.", cognates: "capable(유능한)", group: "성격과 태도" },
-                    { word: "peculiar", meaning: "기묘한, 독특한", root: "pecu(가축, 재산) → 남과 구별되는 개인 소유의 독특함.", cognates: "-", group: "외모와 형태" },
-                    { word: "line", meaning: "주름, 선", root: "linum(아마실) → 실처럼 그어진 선.", cognates: "linear(직선의)", group: "외모와 형태" },
-                    { word: "impressive", meaning: "인상적인", root: "im(안에) + press(누르다) → 마음 속에 꾹 눌러 새겨진.", cognates: "impress(인상을 주다)", group: "성격과 태도" },
-                    { word: "ignorance", meaning: "무지", root: "in(부정) + gno(알다).", cognates: "ignore(무시하다)", group: "성격과 태도" },
-                    { word: "humbleness", meaning: "겸손", root: "humus(땅) → 땅에 엎드릴 만큼 스스로를 낮춤.", cognates: "humble(겸손한)", group: "성격과 태도" },
-                    { word: "even", meaning: "짝수의; 평평한", root: "고대 영어 efen(수평의, 같은).", cognates: "-", group: "외모와 형태" },
-                    { word: "inactive", meaning: "소극적인", root: "in(부정) + active(활동적인).", cognates: "active(활동적인)", group: "성격과 태도" },
-                    { word: "offensive", meaning: "공격적인, 모욕적인", root: "ob(반대하여) + fens(치다) → 남을 반대하여 공격하는.", cognates: "offend(기분 상하게 하다)", group: "성격과 태도" },
-                    { word: "in shape", meaning: "건강 상태가 좋은", root: "shape(형태) → 몸의 형태가 제대로 잡힌.", cognates: "-", group: "외모와 형태" },
-                    { word: "modest", meaning: "겸손한", root: "modus(척도) → 정도를 지나치지 않고 지키는.", cognates: "moderation(적당함)", group: "성격과 태도" },
-                    { word: "ambition", meaning: "야망", root: "ambi(양쪽으로) + ire(가다) → 표를 얻으러 여기저기 돌아다니는 열망.", cognates: "ambitious(야심 있는)", group: "성격과 태도" },
-                    { word: "intense", meaning: "격렬한", root: "in(안으로) + tens(당기다) → 안으로 팽팽하게 당겨진.", cognates: "tension(긴장)", group: "성격과 태도" },
-                    { word: "impress", meaning: "인상을 주다", root: "im(안에) + press(누르다).", cognates: "impression(인상)", group: "성격과 태도" },
-                    { word: "patient", meaning: "참을성 있는", root: "pati(고통받다) → 고통을 묵묵히 참아내는.", cognates: "patience(인내)", group: "성격과 태도" },
-                    { word: "tourist attraction", meaning: "관광 명소", root: "attract(끌어당기다) + ion → 사람을 끌어당기는 곳.", cognates: "attract(끌다)", group: "외모와 형태" },
-                    { word: "in appearance", meaning: "외관상", root: "appear(보이다) + ance.", cognates: "appear(나타나다)", group: "외모와 형태" },
-                    { word: "personal", meaning: "개인적인", root: "person(사람) + al.", cognates: "person(사람)", group: "성격과 태도" },
-                    { word: "unambitious", meaning: "야망이 없는", root: "un(부정) + ambitious(야심적인).", cognates: "ambition(야망)", group: "성격과 태도" },
-                    { word: "capability", meaning: "능력", root: "cap(잡다) + ability → 어떤 일을 잡아낼 수 있는 힘.", cognates: "capable(유능한)", group: "성격과 태도" },
-                    { word: "shaped", meaning: "~ 모양의", root: "shape(모양) + d.", cognates: "shape(모양)", group: "외모와 형태" },
-                    { word: "diligence", meaning: "근면함", root: "dis(따로) + legere(선택하다) → 하나하나 세심하게 골라내는 정성.", cognates: "diligent(부지런한)", group: "성격과 태도" },
-                    { word: "convinced", meaning: "확신하는", root: "con(완전히) + vinc(이기다) → 의심을 완전히 이겨내고 믿는.", cognates: "convince(설득하다)", group: "성격과 태도" },
-                    { word: "brilliance", meaning: "탁월함", root: "brilliant(빛나는) + ance.", cognates: "brilliant(훌륭한)", group: "성격과 태도" },
-                    { word: "fiercely", meaning: "맹렬하게", root: "fierce(사나운) + ly.", cognates: "fierce(사나운)", group: "성격과 태도" }
-                ],
-                "3강 (감정/기분)": [
-                    { word: "uneasy", meaning: "불안해하는", root: "un(부정) + easy(편안한).", cognates: "easy(쉬운, 편안한)", group: "부정적 감정" },
-                    { word: "nervous", meaning: "긴장한, 초조한", root: "nervus(신경) + ous → 신경이 곤두선 상태.", cognates: "nerve(신경)", group: "부정적 감정" },
-                    { word: "sorrowful", meaning: "슬픈", root: "sorrow(슬픔) + ful.", cognates: "sorrow(슬픔)", group: "부정적 감정" },
-                    { word: "relief", meaning: "안심, 다행", root: "re(다시) + levare(가볍게 하다) → 무거운 짐을 내려놓아 가벼워짐.", cognates: "relieve(덜어주다)", group: "긍정/기타 감정" },
-                    { word: "moody", meaning: "변덕스러운, 침울한", root: "mood(기분) + y → 기분에 따라 오락가락하는.", cognates: "mood(기분)", group: "부정적 감정" },
-                    { word: "horror", meaning: "공포", root: "horrere(부들부들 떨다) → 털이 곤두설 정도의 두려움.", cognates: "horrible(끔찍한)", group: "부정적 감정" },
-                    { word: "scream", meaning: "소리치다", root: "고대 노르드어 skræma(위협하다).", cognates: "-", group: "부정적 감정" },
-                    { word: "misery", meaning: "비참함", 초: "miser(불쌍한) + y → 불쌍하고 고통스러운 상태.", cognates: "miserable(비참한)", group: "부정적 감정" },
-                    { word: "astounded", meaning: "몹시 놀란", root: "ex(밖으로) + tonare(천둥치다) → 벼락 맞은 것처럼 놀란.", cognates: "astonish(깜짝 놀라게 하다)", group: "긍정/기타 감정" },
-                    { word: "cry", meaning: "울다", root: "quiritare(소리치다) → 원래는 도움을 청하며 외치다에서 유래.", cognates: "-", group: "부정적 감정" },
-                    { word: "bother", meaning: "귀찮게 하다", root: "고대 영어. 소음이나 말썽으로 성가시게 함.", cognates: "-", group: "부정적 감정" },
-                    { word: "frightened", meaning: "무서워하는", root: "fright(공포) + en + ed.", cognates: "fright(공포)", group: "부정적 감정" },
-                    { word: "emotional", meaning: "감정적인", root: "emotion(감정) + al.", cognates: "emotion(감정)", group: "긍정/기타 감정" },
-                    { word: "burst into laughter", meaning: "웃음을 터뜨리다", root: "burst(터지다) + into + laughter(웃음).", cognates: "burst(터지다)", group: "긍정/기타 감정" },
-                    { word: "unhappy", meaning: "불행한", root: "un(부정) + happy(행복한).", cognates: "happy(행복한)", group: "부정적 감정" },
-                    { word: "disgusting", meaning: "역겨운", root: "dis(부정) + gust(맛) → 도저히 맛볼 수 없이 구역질 나는.", cognates: "gusto(맛, 풍미)", group: "부정적 감정" },
-                    { word: "scare", meaning: "겁먹게 하다", root: "고대 노르드어 skirra(놀라게 하다).", cognates: "scary(무서운)", group: "부정적 감정" },
-                    { word: "ashamed", meaning: "부끄러워하는", root: "a(강조) + shame(수치심) + ed.", cognates: "shame(수치)", group: "부정적 감정" },
-                    { word: "resentful", meaning: "분개한", root: "re(다시) + sent(느끼다) → 나쁜 기억을 자꾸 다시 떠올리며 화냄.", cognates: "resent(분개하다)", group: "부정적 감정" },
-                    { word: "surprise", meaning: "놀라게 하다", root: "sur(위에) + prise(잡다) → 갑자기 덮쳐서 잡다.", cognates: "surprising(놀라운)", group: "긍정/기타 감정" },
-                    { word: "amazement", meaning: "놀람", root: "amaze(놀라게 하다) + ment.", cognates: "amaze(놀라게 하다)", group: "긍정/기타 감정" },
-                    { word: "grief", meaning: "슬픔, 비애", root: "gravis(무거운) → 가슴을 짓누르는 무거운 감정.", cognates: "grieve(슬퍼하다)", group: "부정적 감정" },
-                    { word: "jealous", meaning: "질투하는", root: "zelus(열의) → 사랑이나 소유에 대한 지나친 열망.", cognates: "jealousy(질투)", group: "부정적 감정" },
-                    { word: "amaze", meaning: "놀라게 하다", root: "a(안에) + maze(미로) → 미로에 빠져 어리둥절하게 만듦.", cognates: "amazing(놀라운)", group: "긍정/기타 감정" },
-                    { word: "depressed", meaning: "우울한", root: "de(아래로) + press(누르다) → 감정이 밑으로 꾹 눌린.", cognates: "depress(우울하게 하다)", group: "부정적 감정" },
-                    { word: "crocodile tears", meaning: "거짓 눈물", root: "악어가 먹이를 먹으며 눈물을 흘린다는 전설에서 유래.", cognates: "crocodile(악어)", group: "부정적 감정" },
-                    { word: "sentimental", meaning: "감상적인", root: "sentiment(감상) + al.", cognates: "sentiment(정서)", group: "긍정/기타 감정" },
-                    { word: "annoyed", meaning: "짜증 난", root: "ad(~에게) + noyer(싫어하다) → 싫은 감정을 자극받은.", cognates: "annoy(짜증나게 하다)", group: "부정적 감정" },
-                    { word: "feeling", meaning: "감정", root: "feel(느끼다) + ing.", cognates: "feel(느끼다)", group: "긍정/기타 감정" },
-                    { word: "terrible", meaning: "지독한", root: "terrere(무섭게 하다) + ible → 두려움을 일으키는.", cognates: "terror(공포)", group: "부정적 감정" },
-                    { word: "eager", meaning: "갈망하는", root: "acer(날카로운, 신 맛의) → 감각이 날카로워질 정도로 몹시 원하는.", cognates: "eagerness(열의)", group: "긍정/기타 감정" },
-                    { word: "disgusted", meaning: "넌더리가 나는", root: "disgust(역겨움) + ed.", cognates: "disgust(역겨움)", group: "부정적 감정" },
-                    { word: "awfully", meaning: "몹시, 엄청", root: "awe(경외심) + ful + ly → 두려울 정도로 엄청나게.", cognates: "awful(끔찍한)", group: "긍정/기타 감정" },
-                    { word: "amazing", meaning: "놀랄 만한", root: "amaze(놀라게 하다) + ing.", cognates: "amaze(놀라게 하다)", group: "긍정/기타 감정" },
-                    { word: "sympathetic", meaning: "동정심 있는", root: "sym(함께) + pathy(느낌) → 남의 아픔을 함께 느끼는.", cognates: "sympathy(동정, 공감)", group: "긍정/기타 감정" },
-                    { word: "tolerate", meaning: "참다, 견디다", root: "tolerare(견디다, 떠맡다).", cognates: "tolerance(관용)", group: "긍정/기타 감정" },
-                    { word: "proud", meaning: "자랑스러워하는", root: "고대 프랑스어 prud(용감한, 오만한).", cognates: "pride(자부심)", group: "긍정/기타 감정" },
-                    { word: "green with envy", meaning: "매우 부러워하다", root: "질투에 사로잡히면 안색이 창백한 녹색이 된다는 은유.", cognates: "envy(부러움)", group: "부정적 감정" },
-                    { word: "sick and tired of", meaning: "~에 싫증나다", root: "병나고 피곤할 정도로 지쳤다는 뜻.", cognates: "sick(아픈)", group: "부정적 감정" },
-                    { word: "ridiculous", meaning: "우스꽝스러운", root: "ridere(웃다) + culous → 사람들의 비웃음을 사는.", cognates: "ridicule(조롱하다)", group: "부정적 감정" },
-                    { word: "kind", meaning: "친절한", root: "kin(혈연, 친족) → 같은 피를 나눈 가족처럼 따뜻하게 대하는.", cognates: "kinship(친족 관계)", group: "긍정/기타 감정" },
-                    { word: "anxiety", meaning: "걱정, 불안", root: "angere(목을 조르다) → 목이 조이는 듯한 답답한 마음.", cognates: "anxious(불안한)", group: "부정적 감정" },
-                    { word: "envious", meaning: "질투하는", root: "envy(질투) + ous.", cognates: "envy(부러워하다)", group: "부정적 감정" },
-                    { word: "in sympathy with", meaning: "~에 공감하여", root: "sympathy(공감, 동정).", cognates: "sympathy(동정)", group: "긍정/기타 감정" },
-                    { word: "fright", meaning: "공포", root: "고대 영어 fyrhto(두려움).", cognates: "frighten(겁주다)", group: "부정적 감정" },
-                    { word: "have the nerve to", meaning: "~할 용기가 있다", root: "nerve가 신경에서 '담력, 뻔뻔함'으로 뜻 확장.", cognates: "nerve(신경)", group: "긍정/기타 감정" },
-                    { word: "emotion", meaning: "감정", root: "e(밖으로) + mot(움직이다) → 마음속에서 밖으로 움직여 나오는 것.", cognates: "motion(움직임)", group: "긍정/기타 감정" },
-                    { word: "lose one's temper", meaning: "화내다", root: "temper(평정심)를 잃어버리다(lose).", cognates: "temper(성질)", group: "부정적 감정" }
-                ],
-                "4강 (음식/요리)": [
-                    { word: "inedible", meaning: "먹을 수 없는", root: "in(부정) + ed(먹다) + ible → 식용 불가능한.", cognates: "edible(먹을 수 있는)", group: "음식과 상태" },
-                    { word: "vegetarian diet", meaning: "채식주의 식단", root: "vegetable(채소) + arian.", cognates: "vegetable(채소)", group: "음식과 상태" },
-                    { word: "rot", meaning: "썩다, 부패하다", root: "고대 영어 rotian(부패하다).", cognates: "rotten(썩은)", group: "요리와 재료" },
-                    { word: "glue", meaning: "붙이다", root: "glus(아교, 접착제).", cognates: "-", group: "요리와 재료" },
-                    { word: "vegetarianism", meaning: "채식주의", root: "vegetarian(채식주의자) + ism.", cognates: "vegetarian(채식주의자)", group: "음식과 상태" },
-                    { word: "fresh", meaning: "신선한", root: "고대 프랑스어 freis(새로운).", cognates: "freshen(상쾌하게 하다)", group: "음식과 상태" },
-                    { word: "moment", meaning: "순간", root: "movere(움직이다) → 움직이는 아주 짧은 찰나.", cognates: "movement(움직임)", group: "음식과 상태" },
-                    { word: "broil", meaning: "석쇠에 굽다", root: "불(fire)에 직접 닿게 굽는 방식.", cognates: "boil(끓이다)", group: "요리와 재료" },
-                    { word: "cooking", meaning: "요리", root: "cook(요리하다) + ing.", cognates: "cook(요리사)", group: "요리와 재료" },
-                    { word: "immediate", meaning: "즉각적인", root: "im(부정) + mediat(중간의) → 중간에 아무것도 없이 바로 이어지는.", cognates: "medium(중간)", group: "음식과 상태" },
-                    { word: "savor", meaning: "맛과 향", root: "sapere(맛이 나다, 지혜롭다) → 깊이 음미하다.", cognates: "savory(풍미 있는)", group: "음식과 상태" },
-                    { word: "unrefined", meaning: "가공하지 않은", root: "un(부정) + re(다시) + fine(끝내다) → 정제 과정을 거치지 않은.", cognates: "refine(정제하다)", group: "요리와 재료" },
-                    { word: "serving tray", meaning: "쟁반", root: "serve(제공하다) + tray(쟁반).", cognates: "serve(제공하다)", group: "음식과 상태" },
-                    { word: "decayed", meaning: "부패한", root: "de(아래로) + cadere(떨어지다) → 상태가 무너져 내린.", cognates: "decay(부패하다)", group: "요리와 재료" },
-                    { word: "nourishment", meaning: "영양분", root: "nutrire(기르다) + ment → 몸을 길러주는 성분.", cognates: "nourish(영양을 주다)", group: "음식과 상태" },
-                    { word: "cut", meaning: "자르다", root: "고대 영어 cyttan.", cognates: "-", group: "요리와 재료" },
-                    { word: "malnutrition", meaning: "영양실조", root: "mal(나쁜) + nutrition(영양) → 영양 상태가 나쁨.", cognates: "malfunction(오작동)", group: "음식과 상태" },
-                    { word: "spoil", meaning: "상하다, 부패하다", root: "spolium(약탈품) → 쓸모없게 망치다에서 상하다로 확장.", cognates: "spoiler(스포일러)", group: "요리와 재료" },
-                    { word: "feed", meaning: "먹이다", root: "food(음식)의 동사형.", cognates: "food(음식)", group: "요리와 재료" },
-                    { word: "mix", meaning: "섞다", root: "miscere(섞다).", cognates: "mixture(혼합물)", group: "요리와 재료" },
-                    { word: "ripe", meaning: "익은", root: "repan(거두다) → 수확할 준비가 된.", cognates: "ripen(익다)", group: "음식과 상태" },
-                    { word: "cooked", meaning: "조리된", root: "cook(요리하다) + ed.", cognates: "cook(요리사)", group: "요리와 재료" },
-                    { word: "drink", meaning: "음료", root: "고대 영어 drincan.", cognates: "-", group: "음식과 상태" },
-                    { word: "dietary fiber", meaning: "식이 섬유", root: "diet(식단) + fiber(섬유질).", cognates: "diet(식단)", group: "요리와 재료" },
-                    { word: "instantly", meaning: "즉시", root: "in(안에) + stant(서다) → 지체 없이 바로 서는 순간.", cognates: "instant(즉각적인)", group: "음식과 상태" },
-                    { word: "nutritional", meaning: "영양상의", root: "nutrition(영양) + al.", cognates: "nutrition(영양)", group: "음식과 상태" },
-                    { word: "go well with", meaning: "조화되다", root: "잘(well) 어울려 가다(go).", cognates: "-", group: "요리와 재료" },
-                    { word: "mill", meaning: "잘게 갈다", root: "mola(맷돌) → 곡식을 부수다.", cognates: "miller(방앗간 주인)", group: "요리와 재료" },
-                    { word: "outdoor grill", meaning: "야외용 석쇠", root: "outdoor(야외) + grill(석쇠).", cognates: "outdoors(야외에서)", group: "요리와 재료" },
-                    { word: "give flavor to", meaning: "~에 맛을 더하다", root: "flavor(풍미, 맛)를 주다.", cognates: "flavor(풍미)", group: "요리와 재료" },
-                    { word: "raw material", meaning: "원료", root: "raw(날것의) + material(재료).", cognates: "raw(날것의)", group: "음식과 상태" },
-                    { word: "container", meaning: "용기", root: "con(함께) + tain(잡다) → 물건을 함께 잡아 담는 그릇.", cognates: "contain(포함하다)", group: "요리와 재료" },
-                    { word: "eatable", meaning: "먹을 수 있는", root: "eat(먹다) + able.", cognates: "eat(먹다)", group: "음식과 상태" },
-                    { word: "spice", meaning: "조미료", root: "species(종류) → 중세 시대에는 아주 특별한 종류의 물품을 향신료라 부름.", cognates: "spicy(매운)", group: "요리와 재료" },
-                    { word: "fragrance", meaning: "향기", root: "fragrare(달콤한 냄새가 나다).", cognates: "fragrant(향기로운)", group: "음식과 상태" },
-                    { word: "French cuisine", meaning: "프랑스 요리", root: "cuisine은 프랑스어로 '부엌, 요리법'을 의미.", cognates: "cuisine(요리법)", group: "요리와 재료" },
-                    { word: "in an instant", meaning: "눈 깜짝할 사이에", root: "instant(즉각적인) 찰나에.", cognates: "instant(순간)", group: "음식과 상태" }
-                ],
-                "5강 (의류/패션)": [
-                    { word: "fashionable", meaning: "최신 유행의", root: "fashion(유행) + able.", cognates: "fashion(유행)", group: "패션과 의류" },
-                    { word: "furry", meaning: "모피로 만든", root: "fur(털) + ry.", cognates: "fur(모피)", group: "옷과 재료" },
-                    { word: "clothes", meaning: "의상, 복장", root: "cloth(천)의 복수형 → 천 조각들을 모아 만든 옷.", cognates: "cloth(천)", group: "패션과 의류" },
-                    { word: "striped", meaning: "줄무늬가 있는", root: "stripe(줄무늬) + d.", cognates: "stripe(줄무늬)", group: "옷과 재료" },
-                    { word: "cleaner", meaning: "세탁 세제", root: "clean(깨끗한) + er → 깨끗하게 만드는 것.", cognates: "clean(깨끗한)", group: "옷 관리" },
-                    { word: "waistcoat", meaning: "조끼", root: "waist(허리) + coat(코트) → 허리까지 오는 상의.", cognates: "waist(허리)", group: "패션과 의류" },
-                    { word: "all the fashion", meaning: "한창 유행하는", root: "그 시대의 '모든(all)' 유행(fashion)을 선도함.", cognates: "fashion(패션)", group: "패션과 의류" },
-                    { word: "formality", meaning: "정식, 형식", root: "formal(공식적인) + ity → 격식을 차림.", cognates: "formal(격식있는)", group: "패션과 의류" },
-                    { word: "apparent", meaning: "명백한", root: "ad(~쪽으로) + parere(나타나다) → 눈앞에 확실히 드러난.", cognates: "appear(나타나다)", group: "옷과 재료" },
-                    { word: "comfortable", meaning: "편안한", root: "com(강조) + fort(강한) + able → 마음을 강하게 다독여 편안하게 해줌.", cognates: "comfort(위안)", group: "옷과 재료" },
-                    { word: "modify", meaning: "옷을 고쳐 만들다", root: "modus(척도) + fy(만들다) → 알맞은 크기로 조절하다.", cognates: "modification(수정)", group: "옷 관리" },
-                    { word: "plain", meaning: "평범한", root: "planus(평평한) → 장식이 없고 밋밋한.", cognates: "plane(평면)", group: "옷과 재료" },
-                    { word: "vogue", meaning: "유행, 인기", root: "voguer(노를 젓다) → 파도를 타고 물결치듯 퍼져나가는 유행.", cognates: "-", group: "패션과 의류" },
-                    { word: "informal", meaning: "비공식적인", root: "in(부정) + formal(격식있는) → 격식을 차리지 않은 편안한 옷차림.", cognates: "formal(격식있는)", group: "패션과 의류" },
-                    { word: "superior", meaning: "고가의, 고급의", root: "super(위에) + ior → 질이 더 위에 있는.", cognates: "super(최고의)", group: "옷과 재료" },
-                    { word: "fade out", meaning: "점점 희미해지다", root: "fade(바래다) + out(완전히).", cognates: "fade(색이 바래다)", group: "옷 관리" },
-                    { word: "sewing machine", meaning: "재봉틀", root: "sew(바느질하다) + machine(기계).", cognates: "sew(바느질하다)", group: "옷 관리" },
-                    { word: "unfold", meaning: "펴다", root: "un(반대) + fold(접다) → 접힌 것을 반대로 펴다.", cognates: "fold(접다)", group: "옷 관리" },
-                    { word: "stitch", meaning: "바느질하다", root: "고대 영어 stician(찌르다) → 바늘로 천을 찌르는 동작.", cognates: "stick(찌르다)", group: "옷 관리" },
-                    { word: "discomfort", meaning: "불편", root: "dis(반대) + comfort(편안함).", cognates: "comfort(편안함)", group: "옷과 재료" },
-                    { word: "alteration", meaning: "수정, 변경", root: "alter(다른) + ation → 옷의 핏을 다르게 고침.", cognates: "alter(바꾸다)", group: "옷 관리" },
-                    { word: "suitable", meaning: "적당한, 어울리는", root: "suit(어울리다) + able → 나에게 잘 맞는.", cognates: "suit(정장, 어울리다)", group: "옷과 재료" },
-                    { word: "cotton candy", meaning: "솜사탕", root: "cotton(목화솜)처럼 생긴 사탕(candy).", cognates: "cotton(면)", group: "옷과 재료" },
-                    { word: "costume", meaning: "의상 한 벌", root: "custom(관습)과 어원이 같음. 특정 시대나 지역의 관습적 복장.", cognates: "custom(관습)", group: "패션과 의류" },
-                    { word: "be in fashion", meaning: "유행하고 있다", root: "패션(fashion)의 흐름 안에(in) 있다.", cognates: "fashion(패션)", group: "패션과 의류" },
-                    { word: "loosen", meaning: "느슨하게 하다", root: "loose(느슨한) + en(동사화).", cognates: "loose(느슨한)", group: "옷 관리" },
-                    { word: "textile", meaning: "천, 직물", root: "texere(짜다, 엮다) → 실을 엮어 만든 것.", cognates: "text(글 - 단어를 엮은 것)", group: "옷과 재료" },
-                    { word: "decorative", meaning: "장식적인", root: "decorate(장식하다) + ive.", cognates: "decorate(장식하다)", group: "옷과 재료" },
-                    { word: "lengthen", meaning: "길게 하다", root: "length(길이) + en(동사화).", cognates: "long(긴)", group: "옷 관리" },
-                    { word: "laundromat", meaning: "세탁소", root: "laundry(세탁) + automaton(자동기계) → 코인 자동 세탁소.", cognates: "laundry(세탁물)", group: "옷 관리" },
-                    { word: "tight", meaning: "꼭 맞는", root: "고대 노르드어 thettr(단단한).", cognates: "tighten(조이다)", group: "옷과 재료" }
-                ],
-                "6강 (집/청소)": [
-                    { word: "neatness", meaning: "단정함, 깔끔함", root: "neat(깔끔한) + ness.", cognates: "neat(단정한)", group: "집과 청소" },
-                    { word: "discard, throw away", meaning: "처리하다, 처분하다", root: "dis(버리다) + card(카드) → 게임에서 불필요한 카드를 버림.", cognates: "card(카드)", group: "집과 청소" },
-                    { word: "burglar alarm", meaning: "도난경보기", root: "burglar(도둑) + alarm(경보).", cognates: "burglar(도둑)", group: "집기 및 가구" },
-                    { word: "roomy", meaning: "넓은, 광대한", root: "room(공간, 방) + y → 방처럼 공간이 넉넉한.", cognates: "room(방, 공간)", group: "집과 청소" },
-                    { word: "messy", meaning: "어질러진, 지저분한", root: "mess(엉망진창) + y.", cognates: "mess(엉망진창)", group: "집과 청소" },
-                    { word: "dispose of", meaning: "~을 처분하다", root: "dis(멀리) + pose(두다) → 내 손을 떠나 멀리 치워두다.", cognates: "dispose(배치하다, 처분하다)", group: "집과 청소" },
-                    { word: "household appliance", meaning: "가전제품", root: "household(가정의) + apply(적용하다)에서 파생된 기구.", cognates: "house(집)", group: "집기 및 가구" },
-                    { word: "take a nap", meaning: "낮잠을 자다", root: "nap(낮잠)을 취하다(take).", cognates: "nap(낮잠)", group: "집과 청소" },
-                    { word: "step", meaning: "계단", root: "고대 영어 stæpe(발걸음).", cognates: "step(걸음)", group: "집기 및 가구" },
-                    { word: "litter", meaning: "쓰레기 더미", root: "lectus(침대) → 원래 짚을 깐 잠자리에서, 짚이 어질러진 모양으로 뜻 변화.", cognates: "-", group: "집과 청소" },
-                    { word: "valuable", meaning: "대단히 귀중한", root: "value(가치) + able → 가치를 매길 수 있을 만큼 중요한.", cognates: "value(가치)", group: "집과 청소" },
-                    { word: "use up", meaning: "다 써 버리다", root: "use(사용하다) + up(완전히) → 바닥까지 완전히 다 쓰다.", cognates: "use(사용하다)", group: "집과 청소" },
-                    { word: "habitual", meaning: "평소의, 일상의", root: "habit(습관) + ual.", cognates: "habit(습관)", group: "집과 청소" },
-                    { word: "dispose", meaning: "버리다, 처분하다", root: "dis(멀리) + pose(놓다).", cognates: "position(위치)", group: "집과 청소" },
-                    { word: "socket", meaning: "콘센트", root: "soc(쟁기날) → 쟁기를 꽂는 구멍에서 코드를 꽂는 구멍으로 확장.", cognates: "-", group: "집기 및 가구" },
-                    { word: "reliance", meaning: "의지, 신뢰", root: "rely(의지하다) + ance.", cognates: "rely(의존하다)", group: "집과 청소" },
-                    { word: "turn on the tap", meaning: "수도꼭지를 틀다", root: "tap(수도꼭지)을 돌려서(turn) 켜다(on).", cognates: "tap(수도꼭지)", group: "집기 및 가구" },
-                    { word: "blush", meaning: "얼굴을 붉히다", root: "blyscan(붉어지다).", cognates: "-", group: "집과 청소" },
-                    { word: "rub", meaning: "닦다, 문지르다", root: "독일어 rubben(문지르다).", cognates: "-", group: "집과 청소" },
-                    { word: "disposable", meaning: "일회용의", root: "dispose(처분하다) + able → 한 번 쓰고 버릴 수 있는.", cognates: "dispose(처분하다)", group: "집과 청소" },
-                    { word: "dirt", meaning: "먼지, 흙", root: "고대 노르드어 drit(배설물)에서 유래.", cognates: "dirty(더러운)", group: "집과 청소" },
-                    { word: "worthless", meaning: "쓸모없는", root: "worth(가치) + less(없는).", cognates: "worth(가치)", group: "집과 청소" },
-                    { word: "wash out", meaning: "씻어 내리다", root: "wash(씻다) + out(밖으로).", cognates: "wash(씻다)", group: "집과 청소" },
-                    { word: "dusty", meaning: "먼지투성이의", root: "dust(먼지) + y.", cognates: "dust(먼지)", group: "집과 청소" },
-                    { word: "apply", meaning: "기구를 설치하다; 적용하다", root: "ad(~에) + plicare(접다) → 포개어 딱 맞게 붙이다.", cognates: "application(지원, 적용)", group: "집기 및 가구" },
-                    { word: "space", meaning: "공간", root: "spatium(방, 거리).", cognates: "spacious(넓은)", group: "집과 청소" },
-                    { word: "wash", meaning: "세척하다", root: "고대 영어 wæscan.", cognates: "-", group: "집과 청소" },
-                    { word: "garbage, trash", meaning: "쓰레기, 폐물", root: "주방의 쓰레기(garbage)와 마른 나뭇가지/종이류 쓰레기(trash).", cognates: "-", group: "집과 청소" },
-                    { word: "clean", meaning: "깨끗한", root: "고대 영어 clæne.", cognates: "cleaner(세제)", group: "집과 청소" },
-                    { word: "more than usual", meaning: "여느 때보다 많이", root: "평소(usual)보다 더(more).", cognates: "usual(보통의)", group: "집과 청소" },
-                    { word: "depend", meaning: "의지하다", root: "de(아래로) + pend(매달리다) → 누군가에게 대롱대롱 매달리다.", cognates: "dependent(의존적인)", group: "집과 청소" },
-                    { word: "retain", meaning: "보유하다", root: "re(뒤에) + tain(잡다) → 버리지 않고 계속 쥐고 있다.", cognates: "contain(포함하다)", group: "집과 청소" },
-                    { word: "cleanser", meaning: "세제", root: "cleanse(세척하다) + er.", cognates: "clean(깨끗한)", group: "집과 청소" },
-                    { word: "doze", meaning: "선잠을 자다, 졸다", root: "스칸디나비아어(꾸벅꾸벅 졸다).", cognates: "-", group: "집과 청소" },
-                    { word: "usually", meaning: "평소에는", root: "usual(보통의) + ly.", cognates: "usual(평소의)", group: "집과 청소" }
-                ],
-                "7강 (학교/학문)": [
-                    { word: "reference", meaning: "언급, 참고", root: "re(다시) + fer(나르다) + ence → 다시 돌아가서 원래의 책을 꺼내옴.", cognates: "refer(언급하다)", group: "학교와 학문" },
-                    { word: "worsen", meaning: "악화시키다", root: "worse(더 나쁜) + en(동사화).", cognates: "worst(최악의)", group: "학교와 학문" },
-                    { word: "table of contents", meaning: "목차, 차례", root: "책 안의 내용(contents)을 표(table)로 정리한 것.", cognates: "content(내용물)", group: "학교와 학문" },
-                    { word: "fluency", meaning: "유창성", root: "fluere(흐르다) + ency → 말이 물 흐르듯이 끊김없이 나옴.", cognates: "fluent(유창한), fluid(액체)", group: "학교와 학문" },
-                    { word: "intelligent", meaning: "지적인, 총명한", root: "inter(사이에) + legere(고르다) → 여러 지식 중 좋은 것을 골라내는 힘.", cognates: "intelligence(지능)", group: "학교와 학문" },
-                    { word: "be exposed to", meaning: "~에 노출되다", root: "ex(밖으로) + pos(두다) → 밖에 꺼내져 무방비 상태가 되다.", cognates: "expose(노출하다)", group: "학교와 학문" },
-                    { word: "conclusive", meaning: "결정적인", root: "con(완전히) + clud(닫다) + ive → 논쟁을 완전히 닫아버리고 끝내는.", cognates: "conclude(결론짓다)", group: "학교와 학문" },
-                    { word: "idea", meaning: "개념, 발상", root: "idein(보다) → 마음의 눈으로 본 형상.", cognates: "ideal(이상적인)", group: "학교와 학문" },
-                    { word: "in theory", meaning: "이론적으로는", root: "theoria(바라봄, 고찰) → 머릿속으로만 생각했을 때.", cognates: "theory(이론)", group: "학교와 학문" },
-                    { word: "uncover", meaning: "노출시키다, 드러내다", root: "un(반대) + cover(덮다) → 덮개를 벗기다.", cognates: "cover(덮다)", group: "학교와 학문" },
-                    { word: "geologist", meaning: "지질학자", root: "geo(지구, 땅) + logy(학문) + ist.", cognates: "geology(지질학), geography(지리학)", group: "학교와 학문" },
-                    { word: "scholarship", meaning: "장학금", root: "scholar(학자) + ship(자격, 상태).", cognates: "scholar(학자)", group: "학교와 학문" },
-                    { word: "linguist", meaning: "언어학자", root: "lingua(혀, 언어) + ist.", cognates: "language(언어), bilingual(2개 국어의)", group: "학교와 학문" },
-                    { word: "inspiration", meaning: "영감", root: "in(안으로) + spir(숨쉬다) + ation → 신이 인간의 마음에 창조적 숨결을 불어넣음.", cognates: "inspire(영감을 주다)", group: "학교와 학문" },
-                    { word: "exposure", meaning: "노출; 폭로", root: "expose(노출시키다) + ure.", cognates: "expose(노출하다)", group: "학교와 학문" },
-                    { word: "demonstration", meaning: "증명, 설명; 시위", root: "de(완전히) + monstrare(보여주다) → 확실하게 눈앞에 보여주며 입증함.", cognates: "demonstrate(증명하다)", group: "학교와 학문" },
-                    { word: "insightful", meaning: "통찰력 있는", root: "in(안을) + sight(보다) + ful → 꿰뚫어 보는 눈이 있는.", cognates: "insight(통찰력)", group: "학교와 학문" },
-                    { word: "in diameter", meaning: "직경이 ~인", root: "dia(가로질러) + meter(측정하다) → 원을 가로질러 잰 길이.", cognates: "meter(미터)", group: "학교와 학문" },
-                    { word: "scholarly", meaning: "학자의", root: "scholar(학자) + ly.", cognates: "school(학교)", group: "학교와 학문" },
-                    { word: "stupidity", meaning: "어리석음", root: "stupidus(놀라서 멍해진) → 지능이 둔한 상태.", cognates: "stupid(멍청한)", group: "학교와 학문" },
-                    { word: "in essence", meaning: "본질적으로", root: "esse(존재하다) → 가장 핵심적인 존재 가치로 볼 때.", cognates: "essence(본질)", group: "학교와 학문" },
-                    { word: "conclusion", meaning: "결론", root: "conclude(결론짓다) + ion.", cognates: "conclude(결론을 내리다)", group: "학교와 학문" },
-                    { word: "solution", meaning: "해답, 해법", root: "solvere(풀다, 느슨하게 하다) → 꼬인 문제를 풀어낸 것.", cognates: "solve(풀다)", group: "학교와 학문" },
-                    { word: "in conclusion", meaning: "끝으로, 결론적으로", root: "결론(conclusion) 안에서.", cognates: "conclude(결론짓다)", group: "학교와 학문" },
-                    { word: "illiterate", meaning: "문맹의", root: "il(부정) + liter(글자) + ate → 글자를 모르는.", cognates: "literacy(읽고 쓰는 능력)", group: "학교와 학문" },
-                    { word: "physicist", meaning: "물리학자", root: "physics(물리학) + ist.", cognates: "physics(물리학), physical(신체의)", group: "학교와 학문" },
-                    { word: "literally", meaning: "글자 그대로", root: "literal(글자의) + ly.", cognates: "letter(편지, 글자)", group: "학교와 학문" },
-                    { word: "essential", meaning: "본질적인, 필수적인", root: "essence(본질) + tial.", cognates: "essence(본질)", group: "학교와 학문" },
-                    { word: "AI (artificial intelligence)", meaning: "인공 지능", root: "art(기술)로 만든(fic) + 지능(intelligence).", cognates: "artificial(인공의)", group: "학교와 학문" },
-                    { word: "motivate", meaning: "격려하다, 영감을 주다", root: "mot(움직이다) + ivate → 마음이 움직이도록 원동력을 주다.", cognates: "motive(동기)", group: "학교와 학문" },
-                    { word: "literacy", meaning: "읽고 쓸 줄 앎", root: "liter(글자) + acy.", cognates: "literature(문학)", group: "학교와 학문" },
-                    { word: "hide", meaning: "숨기다", root: "고대 영어 hydan.", cognates: "-", group: "학교와 학문" },
-                    { word: "in principle", meaning: "원칙적으로는", root: "princeps(첫 번째의, 으뜸가는) → 가장 우선시되는 규칙.", cognates: "principal(교장, 주요한)", group: "학교와 학문" },
-                    { word: "academy", meaning: "전문학교; 학회", root: "고대 그리스의 철학자 플라톤이 제자들을 가르치던 정원의 이름(Akademeia)에서 유래.", cognates: "academic(학문적인)", group: "학교와 학문" },
-                    { word: "improvement", meaning: "향상, 개선", root: "improve(향상시키다) + ment.", cognates: "improve(개선하다)", group: "학교와 학문" },
-                    { word: "definition", meaning: "정의", root: "de(완전히) + fin(끝, 한계) + ition → 말의 의미에 완벽하게 한계선을 그어 규정함.", cognates: "define(정의하다), final(마지막의)", group: "학교와 학문" },
-                    { word: "figure out", meaning: "이해하다; 계산하다", root: "figure(숫자, 형태)를 밖으로(out) 끌어내어 알아내다.", cognates: "figure(숫자, 인물)", group: "학교와 학문" },
-                    { word: "theoretical", meaning: "이론적인", root: "theory(이론) + etical.", cognates: "theory(이론)", group: "학교와 학문" },
-                    { word: "computer-literate", meaning: "컴퓨터를 잘 다루는", root: "computer + literate(읽고 쓸 줄 아는) → 컴퓨터 언어를 이해하는.", cognates: "literate(글을 아는)", group: "학교와 학문" }
-                ],
-                "8강 (교육/제도)": [
-                    { word: "eagerness", meaning: "열의", root: "eager(열망하는) + ness.", cognates: "eager(간절한)", group: "교육과 학교" },
-                    { word: "head teacher", meaning: "(학교 등의) 장", root: "head(우두머리) + teacher(교사).", cognates: "head(머리)", group: "교육과 학교" },
-                    { word: "exit", meaning: "출구", root: "ex(밖으로) + ire(가다) → 밖으로 나가는 곳.", cognates: "itinerary(여행 일정)", group: "제도 및 시설" },
-                    { word: "institution", meaning: "학회; 제도", root: "in(안에) + stit(세우다) + ution → 굳건하게 세워진 조직이나 규칙.", cognates: "institute(기관)", group: "교육과 학교" },
-                    { word: "teach", meaning: "교육하다, 가르치다", root: "고대 영어 tæcan(보여주다, 지시하다).", cognates: "teacher(교사)", group: "교육과 학교" },
-                    { word: "due date", meaning: "예정일, 마감일", root: "due(지불해야 할, 예정된) + date(날짜).", cognates: "due(마감의)", group: "제도 및 시설" },
-                    { word: "calculator", meaning: "계산기", root: "calculus(작은 돌) → 고대 로마인들이 조약돌로 셈을 한 데서 유래.", cognates: "calculate(계산하다)", group: "교육과 학교" },
-                    { word: "lab", meaning: "실험실", root: "laboratory(실험실)의 줄임말. labor(노동)하는 곳.", cognates: "labor(노동)", group: "제도 및 시설" },
-                    { word: "dorm", meaning: "기숙사", root: "dormitory의 줄임말. dorm(잠자다) + itory(장소).", cognates: "dormant(휴면기의)", group: "제도 및 시설" },
-                    { word: "instructive", meaning: "교육적인, 유익한", root: "in(안에) + struct(세우다) + ive → 머릿속에 지식을 세워주는.", cognates: "instruct(가르치다), structure(구조)", group: "교육과 학교" },
-                    { word: "miscalculate", meaning: "잘못 계산하다", root: "mis(잘못) + calculate(계산하다).", cognates: "calculate(계산하다)", group: "교육과 학교" },
-                    { word: "calculation", meaning: "계산", root: "calculate(계산하다) + ion.", cognates: "calculate(계산하다)", group: "교육과 학교" },
-                    { word: "prize", meaning: "상", root: "prehendere(잡다) → 경쟁에서 승리하여 쟁취한 것.", cognates: "prison(감옥)", group: "교육과 학교" },
-                    { word: "midterm", meaning: "중간의 (학기, 임기)", root: "mid(중간) + term(기간, 학기).", cognates: "term(기간)", group: "제도 및 시설" },
-                    { word: "give", meaning: "주다", root: "고대 영어 giefan.", cognates: "-", group: "교육과 학교" },
-                    { word: "scholarship", meaning: "장학금", root: "scholar(학자) + ship(자격).", cognates: "scholar(학자)", group: "교육과 학교" },
-                    { word: "word", meaning: "단어, 용어", root: "고대 영어 word.", cognates: "-", group: "교육과 학교" },
-                    { word: "scholar", meaning: "학자", root: "schola(학교) + ar → 학교에서 연구하는 사람.", cognates: "school(학교)", group: "교육과 학교" },
-                    { word: "eagerly", meaning: "열심히, 간절히", root: "eager(열망하는) + ly.", cognates: "eager(열망하는)", group: "교육과 학교" },
-                    { word: "absence", meaning: "결석", root: "ab(멀리) + esse(존재하다) + ence → 있어야 할 곳에 있지 않음.", cognates: "absent(결석한)", group: "제도 및 시설" },
-                    { word: "hand in", meaning: "제출하다", root: "hand(손으로) in(안에 넣다) → 교수님 손에 넘겨주다.", cognates: "hand(손)", group: "교육과 학교" },
-                    { word: "education", meaning: "교육", root: "e(밖으로) + duc(이끌다) + ation → 아이의 잠재력을 밖으로 이끌어내는 과정.", cognates: "educate(교육하다)", group: "교육과 학교" },
-                    { word: "test", meaning: "시험하다", root: "testum(토기 냄비) → 광석을 냄비에 넣고 열을 가해 순도를 '시험'하던 것에서 유래.", cognates: "-", group: "교육과 학교" },
-                    { word: "grantee", meaning: "장학금 수혜자", root: "grant(주다, 승인하다) + ee(~받는 사람).", cognates: "grant(수여하다), employee(직원)", group: "교육과 학교" },
-                    { word: "submission", meaning: "복종, 제출", root: "sub(아래에) + miss(보내다) + ion → 몸을 낮추거나, 서류를 아래로 밀어넣다.", cognates: "submit(제출하다)", group: "교육과 학교" },
-                    { word: "instruct", meaning: "교육하다", root: "in(안에) + struct(세우다) → 지식을 세워주다.", cognates: "instruction(지시)", group: "교육과 학교" },
-                    { word: "educator", meaning: "교육자", root: "educate(교육하다) + or.", cognates: "education(교육)", group: "교육과 학교" },
-                    { word: "motivation", meaning: "동기 부여", root: "mot(움직이다) + ivation.", cognates: "motivate(동기를 주다)", group: "교육과 학교" },
-                    { word: "take attendance", meaning: "출석을 점검하다", root: "take(취하다) + attendance(출석).", cognates: "attend(참석하다)", group: "제도 및 시설" },
-                    { word: "keen", meaning: "열성적인, 간절한", root: "고대 영어 cene(날카로운, 용감한) → 마음이 날카롭게 집중된.", cognates: "keenly(예리하게)", group: "교육과 학교" },
-                    { word: "enter", meaning: "들어가다", root: "inter(사이에, 안으로).", cognates: "entrance(입구)", group: "제도 및 시설" },
-                    { word: "term paper", meaning: "학기말 과제", root: "term(학기) 끝에 내는 paper(논문).", cognates: "term(학기)", group: "교육과 학교" },
-                    { word: "present", meaning: "출석한", root: "pre(앞에) + esse(존재하다) + ent → 눈앞에 있는.", cognates: "presence(참석)", group: "제도 및 시설" },
-                    { word: "increase", meaning: "증가하다", root: "in(안에) + creas(자라다) → 점점 크게 자라나다.", cognates: "create(창조하다)", group: "교육과 학교" },
-                    { word: "grant", meaning: "장학금, 수여하다", root: "credere(믿다) → 믿고 허락해 주다.", cognates: "credit(신용)", group: "교육과 학교" },
-                    { word: "inspire", meaning: "동기를 부여하다", root: "in(안에) + spir(숨쉬다) → 열정을 불어넣다.", cognates: "inspiration(영감)", group: "교육과 학교" },
-                    { word: "multiplication", meaning: "곱셈, 증식", root: "multi(많은) + plic(접다) + ation → 여러 번 접어 늘림.", cognates: "multiply(곱하다)", group: "교육과 학교" },
-                    { word: "examination", meaning: "시험", root: "examine(조사하다) + ation.", cognates: "exam(시험)", group: "교육과 학교" },
-                    { word: "main", meaning: "주된", root: "magnus(큰).", cognates: "magnitude(규모)", group: "교육과 학교" },
-                    { word: "dormitory dean", meaning: "기숙사 사감", root: "dormitory(기숙사)의 dean(장).", cognates: "dean(학장)", group: "제도 및 시설" },
-                    { word: "memory", meaning: "기억력", root: "memor(기억하는) + y.", cognates: "memorize(기억하다)", group: "교육과 학교" },
-                    { word: "period", meaning: "기간", root: "peri(주위에) + hodos(길) → 한 바퀴 도는 순환 주기.", cognates: "periodic(주기적인)", group: "제도 및 시설" },
-                    { word: "attend", meaning: "출석하다", root: "ad(~쪽으로) + tend(뻗다) → 관심을 뻗고 참여하다.", cognates: "attention(주의)", group: "제도 및 시설" },
-                    { word: "entrance fee", meaning: "입장료", root: "entrance(입장) + fee(요금).", cognates: "enter(들어가다)", group: "제도 및 시설" },
-                    { word: "scholastic", meaning: "학자의, 학교의", root: "scholar(학자) + stic.", cognates: "scholar(학자)", group: "교육과 학교" }
+        const vocaDB = [
+            {
+                lesson: "1강",
+                groups: [
+                    {
+                        root: "act, ag (행동하다, 작용하다)",
+                        words: [
+                            { e: "act", k: "행동하다, 처신하다", ety: "agere(행동하다, 이끌다)", cog: "active(활동적인), agent(대리인)" },
+                            { e: "interaction", k: "상호 작용", ety: "inter(사이에) + act(행동) + ion", cog: "interactive(상호작용하는), react(반응하다)" },
+                            { e: "interact with", k: "~와 상호 작용을 하다", ety: "inter(사이에) + act(행동)", cog: "interaction(상호작용)" },
+                            { e: "behavior", k: "행동", ety: "be(강조) + have(가지다) -> 처신하다", cog: "behave(행동하다)" }
+                        ]
+                    },
+                    {
+                        root: "생애, 탄생, 관계",
+                        words: [
+                            { e: "lifespan", k: "일생, 생애", ety: "life(생명) + span(기간, 늘이다)", cog: "alive(살아있는), expand(늘이다)" },
+                            { e: "pregnancy", k: "임신", ety: "pre(미리) + gnasci(태어나다)", cog: "pregnant(임신한), nature(자연, 본성)" },
+                            { e: "older", k: "나이가 위인, 선배의", ety: "old(나이든)의 비교급", cog: "elder(손위의), oldest(가장 나이든)" },
+                            { e: "immature", k: "미숙한, 미발달의", ety: "im(부정) + mature(성숙한)", cog: "mature(성숙한), maturity(성숙)" },
+                            { e: "senior", k: "연장자, 선배", ety: "sen(늙은) + ior(더 ~한)", cog: "senate(상원), senile(노망난)" },
+                            { e: "nephew", k: "조카 (아들)", ety: "neops(조카, 손자)", cog: "nepotism(친족 등용)" }
+                        ]
+                    },
+                    {
+                        root: "양육, 돌봄",
+                        words: [
+                            { e: "daycare center", k: "탁아소, 보육원", ety: "day(낮) + care(돌봄) + center(중심)", cog: "careful(주의깊은), central(중심의)" },
+                            { e: "raise", k: "~을 기르다, 양육하다", ety: "reisa(위로 들어올리다)", cog: "rise(오르다), arise(발생하다)" },
+                            { e: "raise, bring up", k: "양육하다, 키우다", ety: "위로(up) 끌어올리다(bring)", cog: "upbringing(가정교육)" },
+                            { e: "parent", k: "부모", ety: "parire(낳다, 생산하다)", cog: "parenting(육아)" }
+                        ]
+                    },
+                    {
+                        root: "결합, 동반, 약속",
+                        words: [
+                            { e: "marriage partner", k: "배우자, 남편, 아내", ety: "marry(결혼하다) + part(나누다)", cog: "marital(결혼의), partial(부분적인)" },
+                            { e: "engagement", k: "약혼; 약속", ety: "en(안으로) + gage(서약, 저당) + ment", cog: "engage(관여하다, 약혼하다)" },
+                            { e: "be engaged in", k: "~에 종사하다", ety: "en(안으로) + gage(서약) -> 묶여있다", cog: "engaging(매력적인)" },
+                            { e: "escort", k: "동행하다, 함께 가다", ety: "ex(밖으로) + corrigere(인도하다)", cog: "correct(올바른, 정정하다)" },
+                            { e: "bond, association", k: "관계, 관련, 연관", ety: "bind(묶다) / ad(~에) + soc(결합하다)", cog: "bind(묶다), associate(연관짓다), social(사회의)" }
+                        ]
+                    },
+                    {
+                        root: "소통, 조언, 유사성",
+                        words: [
+                            { e: "communication", k: "연락", ety: "communis(공통의) + ation", cog: "communicate(소통하다), common(공통의)" },
+                            { e: "advice", k: "충고", ety: "ad(~를 향해) + vis(보다) -> 견해를 주다", cog: "advise(충고하다), vision(시야)" },
+                            { e: "resemblance", k: "닮은 점, 유사점", ety: "re(다시) + simul(비슷한) + ance", cog: "resemble(닮다), similar(비슷한)" },
+                            { e: "take after", k: "~와 닮다", ety: "뒤(after)를 따르다(take)", cog: "afterward(나중에)" }
+                        ]
+                    },
+                    {
+                        root: "접촉, 다룸, 운명",
+                        words: [
+                            { e: "come into contact with", k: "~와 접촉하다, 만나다", ety: "con(함께) + tang(만지다)", cog: "contact(접촉), tactile(촉각의)" },
+                            { e: "touch", k: "접촉", ety: "toccare(부딪히다, 만지다)", cog: "touching(감동적인)" },
+                            { e: "deal with", k: "다루다, 대우하다; 치료하다", ety: "deal(나누다, 분배하다)", cog: "dealer(상인)" },
+                            { e: "treatment", k: "취급; 치료", ety: "tractare(다루다, 끌다) + ment", cog: "treat(다루다), abstract(추상적인)" },
+                            { e: "destiny", k: "운명, 숙명", ety: "de(완전히) + stina(고정시키다)", cog: "destination(목적지)" },
+                            { e: "fatal", k: "치명적인; 운명의", ety: "fatum(운명) + al", cog: "fate(운명), fatality(사망자)" }
+                        ]
+                    },
+                    {
+                        root: "기타 동사/명사 (복종, 지지 등)",
+                        words: [
+                            { e: "obedience", k: "복종", ety: "ob(향하여) + audire(듣다)", cog: "obey(복종하다), audience(청중)" },
+                            { e: "disobedient", k: "반항적인", ety: "dis(반대) + obedient(순종하는)", cog: "disobey(불복종하다)" },
+                            { e: "support", k: "지지하다, 옹호하다; 지지", ety: "sub(아래에서) + port(나르다)", cog: "portable(휴대용의), export(수출하다)" },
+                            { e: "commemorate", k: "기념하다, 축하하다", ety: "com(함께) + memor(기억하다)", cog: "memory(기억), memorial(기념비)" },
+                            { e: "celebration", k: "기념, 축하", ety: "celeber(유명한, 붐비는)", cog: "celebrate(축하하다), celebrity(유명인)" }
+                        ]
+                    }
+                ]
+            },
+            {
+                lesson: "2강",
+                groups: [
+                    {
+                        root: "act (행동) vs pass (인내, 수동)",
+                        words: [
+                            { e: "act", k: "행동하다", ety: "agere(행동하다)", cog: "action(행동), active(활동적인)" },
+                            { e: "activity", k: "활동", ety: "act + ive + ity", cog: "activate(활성화하다)" },
+                            { e: "active", k: "매우 적극적인, 활동적인", ety: "act + ive", cog: "actor(배우)" },
+                            { e: "inactive", k: "소극적인, 수동적인", ety: "in(부정) + active", cog: "inactivity(비활동)" },
+                            { e: "passive", k: "소극적인", ety: "pass(고통받다, 수용하다) + ive", cog: "passion(열정), compassion(동정)" },
+                            { e: "patient", k: "참을성 있는", ety: "pati(고통받다) -> 견디는", cog: "patience(인내), impatient(성급한)" },
+                            { e: "impatience", k: "성급함", ety: "im(부정) + patience(인내)", cog: "impatient(참을성없는)" },
+                            { e: "impatiently", k: "성급하게", ety: "impatient + ly", cog: "patience(인내)" }
+                        ]
+                    },
+                    {
+                        root: "외모, 형태, 인상 (Appearance & Form)",
+                        words: [
+                            { e: "form", k: "모양, 꼴, 모습", ety: "forma(형태)", cog: "formal(공식적인), format(형식)" },
+                            { e: "in (good) shape", k: "(건강·몸 상태 등이) 좋은", ety: "shape(형태, 상태)", cog: "shapely(형태가 좋은)" },
+                            { e: "shaped", k: "~ 모양의", ety: "shape + ed", cog: "shapeless(형태가 없는)" },
+                            { e: "egg-shaped", k: "타원형의, 달걀형의", ety: "egg + shape + ed", cog: "oval(타원형의)" },
+                            { e: "appear", k: "나타나다; ~인 것같이 보이다", ety: "ad(~쪽으로) + parere(보이다)", cog: "appearance(외관), apparent(명백한)" },
+                            { e: "in appearance", k: "보기에는, 외관상", ety: "appear + ance", cog: "disappear(사라지다)" },
+                            { e: "look", k: "외관, 겉모습", ety: "locian(보다)", cog: "outlook(전망)" },
+                            { e: "impress", k: "인상을 주다", ety: "im(안으로) + press(누르다)", cog: "impression(인상), pressure(압력)" },
+                            { e: "impressive", k: "강한 인상을 주는, 감명을 주는", ety: "impress + ive", cog: "express(표현하다)" }
+                        ]
+                    },
+                    {
+                        root: "매력, 훌륭함, 빛 (Attraction & Light)",
+                        words: [
+                            { e: "attract", k: "끌어당기다, 매혹하다", ety: "ad(~로) + tract(끌다)", cog: "attraction(매력), tractor(트랙터)" },
+                            { e: "tourist attraction", k: "인기 관광지", ety: "tourist(관광객) + attraction(끌림)", cog: "attractive(매력적인)" },
+                            { e: "appealing", k: "사람을 끄는", ety: "appeal(호소하다) + ing", cog: "appeal(호소, 매력)" },
+                            { e: "charming", k: "매력적인", ety: "charm(매력, 마법) + ing", cog: "charm(매력)" },
+                            { e: "elegance", k: "우아, 고상함", ety: "e(밖으로) + leg(고르다) -> 빼어난 것", cog: "elegant(우아한), elect(선출하다)" },
+                            { e: "glittering", k: "빛나는", ety: "glitter(반짝이다) + ing", cog: "glint(반짝이다)" },
+                            { e: "brilliant idea", k: "훌륭한 생각", ety: "brilliant(빛나는, 탁월한) + idea", cog: "brilliance(탁월함)" },
+                            { e: "bright, intelligent", k: "훌륭한, 눈부신, 뛰어난", ety: "bright(빛나는) / inter(사이에) + leg(고르다)", cog: "intellect(지성)" },
+                            { e: "brilliance", k: "탁월함", ety: "brilliant + ance", cog: "brilliant(눈부신)" }
+                        ]
+                    },
+                    {
+                        root: "자신감, 공격성, 성격 (Personality)",
+                        words: [
+                            { e: "confidence", k: "자신감, 확신", ety: "con(완전히) + fid(믿다) + ence", cog: "confident(확신하는), fidelity(충실함)" },
+                            { e: "be confident of", k: "~을 확신하다", ety: "con + fid + ent", cog: "confide(신뢰하다)" },
+                            { e: "positive", k: "자신만만한", ety: "ponere(놓다) -> 확고히 놓인", cog: "position(위치), pose(자세)" },
+                            { e: "sure, convinced", k: "확신하는", ety: "con(완전히) + vinc(이기다)", cog: "convince(납득시키다), invincible(무적의)" },
+                            { e: "aggression", k: "공격, 침략", ety: "ad(~를 향해) + gress(가다) + ion", cog: "aggressive(공격적인), progress(전진)" },
+                            { e: "offensive", k: "공격적인", ety: "ob(~에 맞서) + fens(치다) + ive", cog: "offense(공격), defend(방어하다)" },
+                            { e: "arrogance", k: "오만, 거만, 불손", ety: "ad(~를 향해) + rogare(요구하다)", cog: "arrogant(거만한), interrogate(심문하다)" },
+                            { e: "proud, haughty", k: "오만한, 거만한", ety: "proud(자랑스러운) / haughty(높은)", cog: "pride(자부심), height(높이)" },
+                            { e: "humbleness", k: "겸손, 겸양", ety: "humus(땅) -> 자신을 낮춤", cog: "humble(겸손한), human(인간)" },
+                            { e: "modest", k: "겸손한", ety: "mod(척도) -> 선을 넘지 않는", cog: "mode(방식), modify(수정하다)" },
+                            { e: "ambition", k: "야망, 포부", ety: "amb(주위에) + it(가다) -> 표를 얻으러 돌아다님", cog: "ambitious(야심찬), exit(출구)" },
+                            { e: "unambitious", k: "야망이 없는", ety: "un(부정) + ambitious", cog: "ambition(야망)" },
+                            { e: "greedy", k: "탐욕스러운", ety: "greed(탐욕) + y", cog: "greed(탐욕)" },
+                            { e: "boldness", k: "배짱", ety: "bold(대담한) + ness", cog: "bold(대담한)" },
+                            { e: "brave, daring", k: "대담한, 용감한", ety: "dare(감히 ~하다) + ing", cog: "bravery(용기), dare(도전)" }
+                        ]
+                    },
+                    {
+                        root: "능력, 지식, 상태 (State & Ability)",
+                        words: [
+                            { e: "able", k: "유능한", ety: "habere(가지다, 붙잡다)", cog: "ability(능력), habit(습관)" },
+                            { e: "capability", k: "능력", ety: "cap(잡다) + able + ity", cog: "capable(유능한), capture(잡다)" },
+                            { e: "incapable", k: "~할 수 없는", ety: "in(부정) + capable", cog: "capacity(용량)" },
+                            { e: "uninformed", k: "(정보가 없어) 모르는", ety: "un(부정) + in(안에) + form(형태)", cog: "inform(알리다), information(정보)" },
+                            { e: "ignorance", k: "무지, 무식", ety: "in(부정) + gno(알다)", cog: "ignore(무시하다), recognize(인식하다)" },
+                            { e: "diligence", k: "근면함, 부지런함", ety: "dis(멀리) + leg(고르다) -> 정성들여 고름", cog: "diligent(부지런한), select(선택하다)" },
+                            { e: "lazy", k: "게으른", ety: "활동이나 에너지가 없는 상태", cog: "laziness(게으름)" },
+                            { e: "lively, energetic", k: "적극적인, 활동적인", ety: "life(생명) / en(안에) + erg(일)", cog: "energy(에너지), alive(살아있는)" }
+                        ]
+                    },
+                    {
+                        root: "기타 (특징, 신체, 강도)",
+                        words: [
+                            { e: "individuality", k: "개성", ety: "in(나눌수없는) + divide(나누다)", cog: "individual(개인), divide(나누다)" },
+                            { e: "type", k: "종류, 유형", ety: "typos(타격, 흔적, 형태)", cog: "typical(전형적인)" },
+                            { e: "fierce pain", k: "격렬한 고통", ety: "fierce(사나운) + pain(고통)", cog: "fiercely(사납게)" },
+                            { e: "fiercely", k: "사납게, 맹렬하게, 지독하게", ety: "fierce + ly", cog: "fierce(사나운)" },
+                            { e: "intense", k: "격렬한", ety: "in(안으로) + tend(뻗다) -> 팽팽한", cog: "intensity(강도), tend(경향이있다)" },
+                            { e: "brow", k: "이마", ety: "눈썹, 이마(고대 영어)", cog: "eyebrow(눈썹)" },
+                            { e: "crease", k: "주름지게 하다", ety: "접힌 부분 (라틴어 crista)", cog: "crisp(바삭한)" },
+                            { e: "line", k: "주름", ety: "linea(선)", cog: "linear(선의)" },
+                            { e: "resemble", k: "~을 닮다", ety: "re(다시) + simul(비슷한)", cog: "resemblance(유사점)" },
+                            { e: "strange, peculiar", k: "이상한, 기묘한", ety: "peculiar(개인 소유의 -> 특이한)", cog: "stranger(이방인)" },
+                            { e: "even", k: "짝수의", ety: "평평한, 짝이 맞는", cog: "evenly(고르게)" },
+                            { e: "personal", k: "개인의, 개인적인", ety: "person(사람) + al", cog: "personality(성격)" }
+                        ]
+                    }
+                ]
+            },
+            {
+                lesson: "3강",
+                groups: [
+                    {
+                        root: "sent, sens (느끼다) & 감정 일반",
+                        words: [
+                            { e: "sentimental", k: "감정[정서]적인, 정에 호소하는", ety: "sent(느끼다) + ment + al", cog: "sentiment(감정), sense(감각)" },
+                            { e: "emotion", k: "감정, 정서", ety: "e(밖으로) + mot(움직이다)", cog: "emotional(감정적인), motion(움직임)" },
+                            { e: "emotional", k: "감정적인", ety: "emotion + al", cog: "motive(동기)" },
+                            { e: "feeling", k: "감정", ety: "feel(느끼다) + ing", cog: "feel(느끼다)" }
+                        ]
+                    },
+                    {
+                        root: "놀람, 공포, 당황 (Fear & Surprise)",
+                        words: [
+                            { e: "horror", k: "당황, 공포", ety: "horrere(머리카락이 쭈뼛 서다, 떨다)", cog: "horrible(끔찍한), horrify(소름끼치게 하다)" },
+                            { e: "fright", k: "공포, 놀람", ety: "fyrhto(두려움)", cog: "frighten(놀라게하다)" },
+                            { e: "frightened to death", k: "무서워 죽을 것 같은", ety: "frighten(겁주다) + death(죽음)", cog: "frightful(무시무시한)" },
+                            { e: "scare", k: "겁먹게 하다, 놀라게 하다", ety: "갑작스런 두려움", cog: "scary(무서운)" },
+                            { e: "amaze, surprise", k: "놀라게 하다", ety: "a(강조) + maze(미로) / sur(위로)+prise(잡다)", cog: "amazing(놀라운), surprising(놀라운)" },
+                            { e: "amazing", k: "놀랄 만한, 굉장한", ety: "amaze + ing", cog: "amazement(놀라움)" },
+                            { e: "in amazement", k: "놀라서", ety: "amaze + ment", cog: "amaze(놀라게하다)" },
+                            { e: "surprise", k: "놀라게 하다", ety: "sur(위로) + prise(잡다) -> 불시의 습격", cog: "enterprise(기업 - 사이를 잡다)" },
+                            { e: "be astounded at[by]", k: "~에 몹시 놀라다", ety: "astound(벼락치듯 놀라게하다)", cog: "astounding(놀라운)" },
+                            { e: "terrible", k: "지독한, 아주 심한", ety: "terr(공포) + ible", cog: "terror(공포), terrify(겁먹게하다)" }
+                        ]
+                    },
+                    {
+                        root: "슬픔, 불안, 비참함 (Sadness & Anxiety)",
+                        words: [
+                            { e: "sorrowful", k: "슬픈", ety: "sorrow(슬픔) + ful", cog: "sorrow(슬픔), sorry(미안한, 유감인)" },
+                            { e: "uneasy", k: "불안해하는, 걱정하는", ety: "un(부정) + easy(편안한)", cog: "ease(쉬움), disease(질병)" },
+                            { e: "anxiety", k: "걱정; 갈망", ety: "anxious(불안한)의 명사형 (목을 조르다에서 유래)", cog: "anxious(불안한, 열망하는)" },
+                            { e: "grief", k: "슬픔, 비애", ety: "gravis(무거운) -> 마음이 무거움", cog: "grieve(슬퍼하다), gravity(중력)" },
+                            { e: "misery", k: "비참함", ety: "miser(비참한 사람) + y", cog: "miserable(비참한)" },
+                            { e: "unhappy", k: "비참한, 불행한", ety: "un(부정) + happy(행복한)", cog: "happiness(행복)" },
+                            { e: "moody", k: "변덕스러운, 침울한", ety: "mood(기분, 감정) + y", cog: "mood(기분)" },
+                            { e: "depressed", k: "우울한; 불경기의", ety: "de(아래로) + press(누르다)", cog: "depression(우울증), pressure(압력)" },
+                            { e: "cry", k: "울다", ety: "소리내어 울다", cog: "outcry(부르짖음)" },
+                            { e: "weep crocodile tears", k: "거짓 눈물을 흘리다", ety: "악어가 먹이를 먹으며 흘리는 눈물에서 유래", cog: "weep(울다)" }
+                        ]
+                    },
+                    {
+                        root: "분노, 짜증, 질투 (Anger & Jealousy)",
+                        words: [
+                            { e: "resentful", k: "분개한", ety: "re(다시) + sent(느끼다) -> 곱씹어 화냄", cog: "resent(분개하다), consent(동의하다)" },
+                            { e: "bother", k: "짜증 나게 하다, 귀찮게 하다", ety: "신경쓰이게 괴롭힘", cog: "bothersome(귀찮은)" },
+                            { e: "annoyed", k: "화가 난, 짜증 난", ety: "ad(~에게) + noyer(해치다)", cog: "annoyance(짜증)" },
+                            { e: "be annoyed with(at)", k: "~에 화가 나다, 귀찮다", ety: "annoy 활용 구문", cog: "annoying(짜증나는)" },
+                            { e: "disgusting", k: "역겨운, 정말 싫은", ety: "dis(반대) + gust(맛) -> 입맛 떨어지는", cog: "disgust(역겨움), gusto(맛, 풍미)" },
+                            { e: "feel disgusted at[by, with]", k: "~에 넌더리가 나다", ety: "disgust 활용", cog: "disgusted(역겨워하는)" },
+                            { e: "get into a temper, lose one’s temper", k: "화내다", ety: "temper(성질, 평정심)를 잃다", cog: "temperature(온도), temperament(기질)" },
+                            { e: "be jealous of", k: "~을 질투하다", ety: "jealousy(질투)", cog: "jealous(질투하는)" },
+                            { e: "envious", k: "부러워하는, 질투하는", ety: "envy(부러움) + ous", cog: "envy(부러움)" },
+                            { e: "be(turn) green with envy", k: "매우 부러워하다", ety: "질투로 얼굴이 창백(녹색)해짐", cog: "envy(부러워하다)" }
+                        ]
+                    },
+                    {
+                        root: "공감, 인내, 긍정적 감정",
+                        words: [
+                            { e: "relief", k: "안심", ety: "re(다시) + lev(가볍다) -> 짐을 덜어줌", cog: "relieve(경감시키다), elevate(올리다)" },
+                            { e: "sympathetic", k: "동정심이 있는", ety: "sym(함께) + path(느끼다) + etic", cog: "sympathy(공감), empathy(감정이입)" },
+                            { e: "in sympathy with", k: "~에 공감하여, ~에 찬성하여", ety: "sympathy 활용", cog: "pathetic(불쌍한)" },
+                            { e: "tolerate, endure, bear, stand", k: "~을 참다, 참고 견디다", ety: "인내를 나타내는 동사들", cog: "tolerant(관대한), endurance(인내)" },
+                            { e: "burst into laughter[a smile]", k: "웃음을 터뜨리다", ety: "burst(터지다) 활용", cog: "burst(터지다)" },
+                            { e: "proud", k: "자랑스러워하는", ety: "긍지를 가진", cog: "pride(자랑)" },
+                            { e: "kind", k: "마음이 따뜻한, 친절한", ety: "kin(친족)에서 유래 -> 가족에게 하듯", cog: "kindness(친절)" }
+                        ]
+                    },
+                    {
+                        root: "기타 행동 및 상태 (부끄러움, 용기, 열망)",
+                        words: [
+                            { e: "scream for help", k: "도와달라고 소리치다", ety: "scream(비명지르다)", cog: "scream(비명)" },
+                            { e: "be ashamed of(at)", k: "~을 부끄러워 하다", ety: "a + shame(수치) + d", cog: "shame(부끄러움)" },
+                            { e: "ridiculous", k: "우스운, 어리석은", ety: "ridere(웃다) -> 비웃음을 살만한", cog: "ridicule(비웃다)" },
+                            { e: "have the nerve to v", k: "~할 용기가 있다", ety: "nerve(신경, 뻔뻔함/용기)", cog: "nervous(초조한)" },
+                            { e: "nervous", k: "긴장한, 초조한", ety: "nerve + ous", cog: "nerve(신경)" },
+                            { e: "be sick and tired of", k: "~에 싫증이 나다", ety: "질려버린 상태 관용구", cog: "sick(아픈)" },
+                            { e: "eager", k: "갈망하는", ety: "열렬히 원하는", cog: "eagerly(열렬히)" },
+                            { e: "awfully", k: "엄청, 몹시", ety: "awe(경외, 두려움) + ful + ly -> 몹시", cog: "awesome(멋진), awful(끔찍한)" }
+                        ]
+                    }
+                ]
+            },
+            {
+                lesson: "4강",
+                groups: [
+                    {
+                        root: "ed (먹다), nutrit (영양)",
+                        words: [
+                            { e: "eatable", k: "먹을 수 있는", ety: "eat(먹다) + able", cog: "eat(먹다)" },
+                            { e: "inedible", k: "먹을 수 없는", ety: "in(부정) + ed(먹다) + ible", cog: "edible(먹을수있는)" },
+                            { e: "nourishment", k: "영양분, 음식물", ety: "nutrire(기르다) -> nourish + ment", cog: "nourish(영양을공급하다)" },
+                            { e: "malnutrition", k: "영양실조, 영양 결핍", ety: "mal(나쁜) + nutrition(영양)", cog: "nutrition(영양), malice(악의)" },
+                            { e: "nutritional", k: "영양상의", ety: "nutrition + al", cog: "nutrient(영양소)" },
+                            { e: "feed", k: "영양분을 공급하다, 기르다", ety: "food(음식)의 동사형", cog: "food(음식), feedback(피드백)" },
+                            { e: "dietary fiber", k: "식이 섬유", ety: "diet(식단) + ary / fiber(섬유)", cog: "diet(식사), fiber(섬유)" }
+                        ]
+                    },
+                    {
+                        root: "채식 및 식재료",
+                        words: [
+                            { e: "vegetarianism", k: "채식주의", ety: "vegetable(채소) + arian(사람) + ism", cog: "vegetation(초목)" },
+                            { e: "vegetarian diet", k: "채식주의 식단", ety: "채식주의자의 식사", cog: "vegetarian(채식주의자)" },
+                            { e: "raw material", k: "원료, 원자재", ety: "raw(가공안된) + material(재료)", cog: "material(물질)" },
+                            { e: "unrefined, natural", k: "가공하지 않은", ety: "un(부정) + re(다시) + fin(끝내다)", cog: "refined(정제된), final(마지막의)" },
+                            { e: "fresh", k: "신선한", ety: "오래되지 않은", cog: "refresh(상쾌하게하다)" },
+                            { e: "ripe", k: "익은, 숙성된", ety: "수확할 준비가 된", cog: "ripen(익다)" }
+                        ]
+                    },
+                    {
+                        root: "조리 동작 및 맛",
+                        words: [
+                            { e: "cooking", k: "요리", ety: "cook(요리하다) + ing", cog: "cooker(요리기구)" },
+                            { e: "cooked", k: "조리된", ety: "cook + ed", cog: "cook(요리사)" },
+                            { e: "broil", k: "석쇠에 굽다", ety: "불에 직접 굽다", cog: "broiler(석쇠)" },
+                            { e: "cut", k: "자르다, 썰다", ety: "기본 조리 동작", cog: "cutter(자르는 도구)" },
+                            { e: "mill", k: "잘게 갈다[빻다], 가루로 만들다", ety: "맷돌(mill)로 갈다", cog: "miller(방앗간 주인)" },
+                            { e: "mix", k: "섞다", ety: "혼합하다", cog: "mixture(혼합물)" },
+                            { e: "savor", k: "(재료 특유의) 맛과 향", ety: "sapere(맛이나다)", cog: "savory(맛있는)" },
+                            { e: "give flavor to", k: "~에 맛을 더하다", ety: "flavor(풍미)를 부여하다", cog: "flavor(맛)" },
+                            { e: "spice", k: "조미료, 양념", ety: "species(종류) -> 특별한 재료", cog: "spicy(매운)" },
+                            { e: "French cuisine", k: "프랑스 요리", ety: "cuisine(요리, 요리법)", cog: "culinary(요리의)" },
+                            { e: "smell, fragrance", k: "향기", ety: "fragr(향기로운) + ance", cog: "fragrant(향기로운)" },
+                            { e: "go well with, match", k: "조화되다", ety: "서로 잘 맞다", cog: "match(어울리다)" }
+                        ]
+                    },
+                    {
+                        root: "부패 (Decay & Spoil)",
+                        words: [
+                            { e: "rot", k: "썩다, 부패하다", ety: "자연적 부패", cog: "rotten(썩은)" },
+                            { e: "decay, spoil", k: "(음식 등이) 상하다, 부패하다", ety: "de(아래로) + cadere(떨어지다) / 망치다", cog: "decadence(타락), accident(사고)" },
+                            { e: "decayed", k: "썩은, 부패한", ety: "decay + ed", cog: "decay(부패)" }
+                        ]
+                    },
+                    {
+                        root: "기구 및 기타",
+                        words: [
+                            { e: "serving tray", k: "음식을 낼 때 쓰는 쟁반", ety: "serve(제공하다) + tray(쟁반)", cog: "servant(하인), service(서비스)" },
+                            { e: "container", k: "용기, 그릇", ety: "con(함께) + tain(담다) + er", cog: "contain(포함하다), retain(유지하다)" },
+                            { e: "outdoor grill", k: "야외용 석쇠", ety: "outdoor(야외) + grill(그릴)", cog: "indoors(실내에)" },
+                            { e: "drink", k: "음료", ety: "마시다 / 음료", cog: "drunk(술취한)" },
+                            { e: "glue", k: "붙이다", ety: "접착제", cog: "gluey(끈적끈적한)" },
+                            { e: "moment", k: "순간", ety: "movimentum(움직임) -> 짧은 시간", cog: "momentary(순간적인), move(움직이다)" },
+                            { e: "instantly", k: "즉시", ety: "in(안에) + stans(서있는) + ly", cog: "instant(즉각적인), stand(서다)" },
+                            { e: "immediate", k: "즉각적인", ety: "im(부정) + mediate(중간의) -> 중간없이", cog: "medium(중간), immediately(즉시)" },
+                            { e: "in an instant", k: "즉시, 눈 깜짝할 사이에", ety: "instant 활용", cog: "instance(사례)" }
+                        ]
+                    }
+                ]
+            },
+            {
+                lesson: "5강",
+                groups: [
+                    {
+                        root: "mod (방식), form (형태), 유행",
+                        words: [
+                            { e: "modify", k: "변경하다, (옷을) 고쳐 만들다", ety: "mod(척도, 방식) + ify(만들다)", cog: "mode(방식), model(모델)" },
+                            { e: "fashionable", k: "최신 유행의, 유행하는", ety: "facere(만들다) -> fashion(만들어진 방식) + able", cog: "fashion(유행), fact(사실)" },
+                            { e: "all the fashion", k: "한창 유행하는", ety: "fashion 활용 관용구", cog: "fashionable(유행하는)" },
+                            { e: "be in fashion", k: "유행하고 있다", ety: "fashion 활용 관용구", cog: "old-fashioned(구식의)" },
+                            { e: "vogue", k: "유행, 인기", ety: "파도를 타고 널리 퍼짐 -> 유행", cog: "in vogue(유행하는)" },
+                            { e: "informal", k: "비공식적인", ety: "in(부정) + form(형태) + al", cog: "formal(공식적인), format(형식)" },
+                            { e: "formality", k: "형식에 구애됨, 정식", ety: "formal + ity", cog: "form(형태)" }
+                        ]
+                    },
+                    {
+                        root: "의복, 직물, 장식",
+                        words: [
+                            { e: "clothes", k: "의상, 복장", ety: "cloth(천)의 복수형", cog: "clothing(의류)" },
+                            { e: "waistcoat", k: "조끼", ety: "waist(허리) + coat(외투)", cog: "waist(허리)" },
+                            { e: "costume", k: "(특별한 날 입는) 옷, 의상 한 벌", ety: "custom(관습)과 같은 어원", cog: "custom(관습)" },
+                            { e: "textile", k: "천, 직물", ety: "texere(짜다) -> 짜여진 것", cog: "text(글), texture(질감)" },
+                            { e: "furry", k: "모피로 만든", ety: "fur(모피) + y", cog: "fur(모피)" },
+                            { e: "cotton candy", k: "솜사탕", ety: "면(cotton) 같은 사탕", cog: "cotton(면)" },
+                            { e: "striped", k: "줄무늬가 있는", ety: "stripe(줄무늬) + ed", cog: "stripe(줄무늬)" },
+                            { e: "plain", k: "평범한", ety: "planus(평평한) -> 장식없는", cog: "plane(평면), explain(설명하다)" },
+                            { e: "tight", k: "꼭 맞는", ety: "단단히 조여진", cog: "tighten(조이다)" },
+                            { e: "decorative", k: "화려한, 장식적인", ety: "decor(아름다움, 장식) + ative", cog: "decorate(장식하다)" }
+                        ]
+                    },
+                    {
+                        root: "세탁, 재봉, 수선",
+                        words: [
+                            { e: "cleaner", k: "세탁 세제, 세정제", ety: "clean(깨끗한) + er", cog: "clean(청소하다)" },
+                            { e: "laundromat", k: "세탁소", ety: "laundry(세탁물) + automat(자동기계)", cog: "laundry(세탁)" },
+                            { e: "sewing machine", k: "재봉틀", ety: "sew(바느질하다) 기계", cog: "sew(바느질하다)" },
+                            { e: "stitch", k: "바느질하다, (바느질로) 만들다", ety: "바늘 한 땀", cog: "stitch(땀)" },
+                            { e: "alteration", k: "수정, 변경", ety: "alter(다른) + ation -> 다르게 만듦", cog: "alter(바꾸다), alternate(번갈아하는)" },
+                            { e: "loosen", k: "느슨하게 하다, 느슨해지다", ety: "loose(느슨한) + en(동사화)", cog: "loose(느슨한)" },
+                            { e: "lengthen", k: "길게 하다, 늘이다", ety: "length(길이) + en", cog: "long(긴), length(길이)" },
+                            { e: "unfold", k: "펴다", ety: "un(반대) + fold(접다)", cog: "fold(접다)" }
+                        ]
+                    },
+                    {
+                        root: "기타 (상태, 적합성)",
+                        words: [
+                            { e: "apparent", k: "명백한, 분명한", ety: "ad(~쪽으로) + parere(보이다)", cog: "appear(나타나다)" },
+                            { e: "superior", k: "고가의, 고급의", ety: "super(위) + ior", cog: "superiority(우월)" },
+                            { e: "comfortable", k: "편안한", ety: "com(강조) + fort(강한) + able", cog: "comfort(위로), force(힘)" },
+                            { e: "discomfort", k: "불편", ety: "dis(반대) + comfort(편안함)", cog: "uncomfortable(불편한)" },
+                            { e: "suitable", k: "적당한, 상당한, 어울리는", ety: "suit(맞추다) + able", cog: "suit(정장, 맞다)" },
+                            { e: "fade out", k: "점점 희미해지다", ety: "fade(바래다) + out", cog: "fade(흐려지다)" }
+                        ]
+                    }
+                ]
+            },
+            {
+                lesson: "6강",
+                groups: [
+                    {
+                        root: "pos (놓다, 두다), val (가치)",
+                        words: [
+                            { e: "dispose of", k: "~을 처분하다", ety: "dis(멀리) + pose(두다)", cog: "position(위치), propose(제안하다)" },
+                            { e: "dispose", k: "(불필요한 것을) 버리다, 처분하다", ety: "멀리 치워버리다", cog: "disposal(처분)" },
+                            { e: "disposable", k: "처분할 수 있는, 일회용의", ety: "dispose + able", cog: "deposit(예금하다)" },
+                            { e: "valuable", k: "값을 매길 수 없는, 대단히 귀중한", ety: "value(가치) + able", cog: "value(가치), evaluate(평가하다)" },
+                            { e: "worthless", k: "쓸모없는", ety: "worth(가치) + less(없는)", cog: "worthy(가치있는)" }
+                        ]
+                    },
+                    {
+                        root: "청결, 오염, 공간 (Clean & Space)",
+                        words: [
+                            { e: "neatness", k: "단정함, 깔끔함", ety: "neat(단정한) + ness", cog: "neat(단정한)" },
+                            { e: "messy", k: "어질러진, 지저분한", ety: "mess(혼란) + y", cog: "mess(엉망진창)" },
+                            { e: "dirt", k: "먼지, 흙", ety: "더러운 물질", cog: "dirty(더러운)" },
+                            { e: "dusty", k: "먼지투성이의", ety: "dust(먼지) + y", cog: "dust(먼지)" },
+                            { e: "litter", k: "어질러진 것, 쓰레기 더미", ety: "마구 버려진 것", cog: "litter(쓰레기를 버리다)" },
+                            { e: "garbage, trash", k: "쓰레기, 폐물", ety: "기본 쓰레기 명칭", cog: "garbage can(쓰레기통)" },
+                            { e: "clean", k: "깨끗한", ety: "불순물이 없는", cog: "cleanly(깨끗하게)" },
+                            { e: "cleanser", k: "(그릇·화장실 등을 닦는) 세제, 세안제", ety: "clean + ser", cog: "cleanse(세척하다)" },
+                            { e: "roomy", k: "넓은, 광대한", ety: "room(공간) + y", cog: "room(방, 공간)" },
+                            { e: "space", k: "공간", ety: "spatium(공간)", cog: "spacious(넓은)" }
+                        ]
+                    },
+                    {
+                        root: "청소 동작 및 기구",
+                        words: [
+                            { e: "turn on[off] the tap faucet", k: "수도꼭지를 틀다[잠그다]", ety: "tap/faucet(수도꼭지)", cog: "tap(톡톡치다, 꼭지)" },
+                            { e: "rub", k: "닦다, 훔치다, 가볍게 문지르다", ety: "마찰하다", cog: "rubber(고무 - 지우개에서 유래)" },
+                            { e: "wash out", k: "(물·액체 등으로) 씻어 내리다", ety: "wash + out", cog: "wash(씻다)" },
+                            { e: "wash", k: "세척하다, 씻다", ety: "물을 이용해 깨끗이 하다", cog: "washer(세탁기)" },
+                            { e: "apply", k: "~에 기구를 설치하다; 적용하다", ety: "ad(~에) + plicare(접다) -> 덧대다", cog: "application(지원, 적용), multiply(곱하다)" },
+                            { e: "discard, throw away", k: "처리하다, 처분하다", ety: "dis(분리) + card(버리다)", cog: "card(카드)" },
+                            { e: "use up", k: "~을 다 써 버리다, 바닥내다", ety: "use(사용하다) + up(완전히)", cog: "useful(유용한)" },
+                            { e: "household[home] appliance", k: "가전제품", ety: "house+hold / apply(적용하다)->기구", cog: "house(집)" },
+                            { e: "burglar alarm", k: "도난경보기", ety: "burglar(도둑) + alarm(경보)", cog: "alarm(경보)" },
+                            { e: "socket", k: "코드 구멍, 콘센트", ety: "끼워넣는 구멍", cog: "socket(콘센트)" },
+                            { e: "step", k: "(보통 복수형) 계단", ety: "발걸음 -> 계단", cog: "step(걸음)" }
+                        ]
+                    },
+                    {
+                        root: "습관, 수면, 의존",
+                        words: [
+                            { e: "habitual", k: "평소의, 일상의", ety: "habit(습관) + ual", cog: "habit(습관), habitat(서식지)" },
+                            { e: "usually", k: "평소에는", ety: "usual(보통의) + ly", cog: "usual(평소의)" },
+                            { e: "more than usual", k: "여느 때보다 많이", ety: "usual 활용구", cog: "unusual(특이한)" },
+                            { e: "take[have] a nap", k: "낮잠을 자다", ety: "nap(낮잠)", cog: "kidnap(유괴하다 - 아이를 채가다)" },
+                            { e: "doze", k: "선잠을 자다, 졸다", ety: "꾸벅꾸벅 졸다", cog: "doze off(잠들다)" },
+                            { e: "reliance", k: "의지, 신뢰", ety: "re(뒤로) + lier(묶다) -> 등기대다", cog: "rely(의지하다), reliable(믿을수있는)" },
+                            { e: "depend", k: "믿다, 의지[의존]하다", ety: "de(아래로) + pend(매달리다)", cog: "dependent(의존적인), suspend(매달다)" },
+                            { e: "blush", k: "(얼굴을) 붉히다, 상기시키다", ety: "부끄러워 붉어짐", cog: "blood(피)" },
+                            { e: "retain", k: "보유하다", ety: "re(뒤에) + tain(유지하다)", cog: "contain(포함하다), maintain(유지하다)" }
+                        ]
+                    }
+                ]
+            },
+            {
+                lesson: "7강",
+                groups: [
+                    {
+                        root: "liter (글자), log (말/학문)",
+                        words: [
+                            { e: "illiterate", k: "문맹의", ety: "il(부정) + liter(글자) + ate", cog: "literate(읽고쓸수있는), literature(문학)" },
+                            { e: "literally", k: "글자 그대로, 완전히", ety: "literal(글자의) + ly", cog: "literal(글자그대로의)" },
+                            { e: "literacy", k: "읽고 쓸 줄 앎", ety: "liter + acy", cog: "literary(문학의)" },
+                            { e: "computer-literate", k: "컴퓨터를 잘 다루는", ety: "computer + literate", cog: "literate" },
+                            { e: "linguist", k: "언어학자; 수개 국어에 능통한 사람", ety: "lingua(혀, 언어) + ist(사람)", cog: "language(언어), bilingual(이중언어의)" },
+                            { e: "geologist", k: "지질학자", ety: "geo(지구) + log(학문) + ist", cog: "geology(지질학), biology(생물학)" }
+                        ]
+                    },
+                    {
+                        root: "학문, 지성, 이론 (Academy & Intellect)",
+                        words: [
+                            { e: "intelligent", k: "지적인, 총명한", ety: "inter(사이에) + legere(고르다) -> 분별력", cog: "intelligence(지능), collect(수집하다)" },
+                            { e: "scholarly", k: "학자의", ety: "scholar(학자) + ly", cog: "school(학교)" },
+                            { e: "scholarship", k: "장학금", ety: "scholar + ship", cog: "scholar(학자)" },
+                            { e: "academy", k: "전문학교; 학회", ety: "플라톤의 아카데미아 유래", cog: "academic(학업의)" },
+                            { e: "in theory", k: "이론적으로는", ety: "theory(이론: thea(보다)에서 유래)", cog: "theater(극장)" },
+                            { e: "theoretical", k: "이론적인", ety: "theory + etical", cog: "theorem(정리)" },
+                            { e: "definition", k: "정의", ety: "de(완전히) + fin(끝내다) -> 한계를 정함", cog: "define(정의하다), finish(끝내다)" },
+                            { e: "solution", k: "해답, 해법", ety: "solvere(풀다)의 명사형", cog: "solve(풀다), dissolve(용해하다)" },
+                            { e: "essential", k: "본질적인, 필수적인", ety: "esse(존재하다) -> 필수불가결한", cog: "essence(본질), present(존재하는)" },
+                            { e: "in essence", k: "본질적으로", ety: "essence(본질) 활용구", cog: "essential(필수적인)" },
+                            { e: "physicist", k: "물리학자", ety: "physics(물리학) + ist", cog: "physical(신체의, 물리적인)" },
+                            { e: "insightful", k: "통찰력 있는", ety: "in(안을) + sight(보는것) + ful", cog: "insight(통찰력)" },
+                            { e: "stupidity", k: "어리석음, 우둔함", ety: "stupid(멍청한) + ity", cog: "stupid(어리석은)" }
+                        ]
+                    },
+                    {
+                        root: "결론, 노출, 발표 (Conclusion & Expose)",
+                        words: [
+                            { e: "conclusive", k: "결정적인", ety: "con(완전히) + clud(닫다) + sive", cog: "include(포함하다), exclude(배제하다)" },
+                            { e: "conclusion", k: "결론", ety: "conclude의 명사형", cog: "conclude(결론짓다)" },
+                            { e: "in conclusion", k: "끝으로, 결론적으로", ety: "conclusion 활용구", cog: "conclusive(결정적인)" },
+                            { e: "exposure", k: "노출; 폭로", ety: "ex(밖으로) + pos(두다) + ure", cog: "expose(노출시키다), position(위치)" },
+                            { e: "be exposed to", k: "~에 노출되다", ety: "expose 수동태", cog: "expose(노출하다)" },
+                            { e: "uncover", k: "노출시키다, 드러내다", ety: "un(반대) + cover(덮다)", cog: "cover(덮다), discover(발견하다)" },
+                            { e: "demonstration", k: "증명, 설명; 시위", ety: "de(완전히) + monstr(보여주다) + ation", cog: "demonstrate(증명하다), monster(괴물)" }
+                        ]
+                    },
+                    {
+                        root: "출판, 변화, 영감 (Publish & Change)",
+                        words: [
+                            { e: "reference", k: "언급, 참고", ety: "re(다시) + fer(나르다) + ence", cog: "refer(참고하다), transfer(옮기다)" },
+                            { e: "table of contents", k: "목차, 차례", ety: "content(내용물)의 표", cog: "contain(포함하다)" },
+                            { e: "inspiration", k: "영감", ety: "in(안으로) + spir(숨쉬다) + ation", cog: "inspire(영감을주다), spirit(정신)" },
+                            { e: "motivate", k: "격려하다, 영감을 주다", ety: "mot(움직이다) + ivate -> 움직이게 하다", cog: "motivation(동기), motion(움직임)" },
+                            { e: "worsen", k: "악화시키다, 악화되다", ety: "worse(더 나쁜) + en", cog: "bad(나쁜)" },
+                            { e: "improvement", k: "향상, 개선", ety: "improve(개선하다) + ment", cog: "improve(개선하다)" },
+                            { e: "fluency", k: "유창성", ety: "flu(흐르다) + ency", cog: "fluent(유창한), fluid(액체)" },
+                            { e: "in diameter", k: "직경이 ~인", ety: "dia(가로질러) + meter(측정)", cog: "meter(미터), dialogue(대화)" },
+                            { e: "figure out", k: "이해하다; 계산해서 합계를 내다", ety: "figure(형태/숫자)를 알아내다", cog: "figure(수치, 모습)" },
+                            { e: "hide", k: "숨기다", ety: "감추다 (고대 영어)", cog: "hidden(숨겨진)" },
+                            { e: "in principle", k: "원칙적으로는, 대체로", ety: "prin(첫째) + cip(잡다)", cog: "principal(주요한), prince(왕자)" },
+                            { e: "idea", k: "개념, 발상", ety: "idein(보다) -> 머릿속에 보이는 것", cog: "ideal(이상적인)" },
+                            { e: "AI (artificial intelligence)", k: "인공 지능", ety: "artificial(인공의: art+fic) + intelligence", cog: "art(예술), factory(공장)" }
+                        ]
+                    }
+                ]
+            },
+            {
+                lesson: "8강",
+                groups: [
+                    {
+                        root: "duc (이끌다), struct (세우다)",
+                        words: [
+                            { e: "education", k: "교육", ety: "e(밖으로) + duc(이끌다) -> 잠재력 인출", cog: "educate(교육하다), produce(생산하다)" },
+                            { e: "educator", k: "교육자, 교사", ety: "educate + or", cog: "reduce(줄이다)" },
+                            { e: "instructive", k: "교육적인, 유익한", ety: "in(안에) + struct(세우다) + ive", cog: "instruct(지시하다), construct(건설하다)" },
+                            { e: "instruct", k: "교육하다", ety: "마음속에 지식을 세우다", cog: "structure(구조)" }
+                        ]
+                    },
+                    {
+                        root: "학교, 제도, 학생 (School & Scholar)",
+                        words: [
+                            { e: "scholastic", k: "학교의, 학자의", ety: "school/scholar 와 같은 어원", cog: "school(학교)" },
+                            { e: "scholar", k: "학자", ety: "여가시간에 공부하는 사람에서 유래", cog: "scholarship(장학금)" },
+                            { e: "institution", k: "학회; 제도", ety: "in(안에) + stitut(세우다) + ion", cog: "institute(기관), constitute(구성하다)" },
+                            { e: "dorm", k: "기숙사", ety: "dormitory(잠자는 곳)의 줄임말", cog: "dormitory(기숙사), dormant(휴면의)" },
+                            { e: "dormitory dean", k: "사감", ety: "dormitory + dean(책임자)", cog: "dean(학장)" },
+                            { e: "lab", k: "실험실, 연구실", ety: "laboratory(일하는 곳)의 줄임말", cog: "labor(노동), elaborate(정교한)" },
+                            { e: "head teacher", k: "(학교 등의) 장", ety: "수석 교사", cog: "head(머리)" }
+                        ]
+                    },
+                    {
+                        root: "시험, 과제, 출결 (Test & Attendance)",
+                        words: [
+                            { e: "test", k: "(지식·자격 등을) 시험하다", ety: "시험", cog: "testify(증언하다)" },
+                            { e: "examination", k: "시험, 조사", ety: "examine(조사하다) + ation", cog: "examine(조사하다)" },
+                            { e: "take attendance", k: "출석을 점검하다", ety: "attend(출석하다) 명사형 활용", cog: "attention(주의)" },
+                            { e: "attend", k: "출석하다", ety: "ad(~에) + tend(뻗다) -> 마음을 뻗다/참석하다", cog: "tendency(경향), extend(연장하다)" },
+                            { e: "present", k: "출석한", ety: "pre(앞에) + esse(있다)", cog: "presence(존재), essence(본질)" },
+                            { e: "absence", k: "결석", ety: "ab(멀리) + esse(있다)", cog: "absent(결석한)" },
+                            { e: "hand in", k: "제출하다", ety: "손으로 건네다", cog: "handout(유인물)" },
+                            { e: "term paper", k: "학기말 과제", ety: "term(학기) + paper(논문)", cog: "terminal(끝의)" },
+                            { e: "due date", k: "예정일, 마감일", ety: "due(지불해야할) 날짜", cog: "duty(의무)" },
+                            { e: "midterm", k: "(학기·임기 등의) 중간의", ety: "mid(중간) + term(학기)", cog: "middle(중간)" },
+                            { e: "period", k: "기간", ety: "peri(주변) + od(길) -> 한 바퀴 도는 시간", cog: "periodic(주기적인), method(방법)" }
+                        ]
+                    },
+                    {
+                        root: "계산, 증식, 상 (Calculate & Prize)",
+                        words: [
+                            { e: "calculator", k: "계산기", ety: "calculus(조약돌->계산) + or", cog: "calculate(계산하다), calcium(칼슘)" },
+                            { e: "calculation", k: "계산", ety: "calculate + ion", cog: "calculus(미적분학)" },
+                            { e: "miscalculate", k: "잘못 계산하다", ety: "mis(잘못) + calculate", cog: "mistake(실수)" },
+                            { e: "multiplication", k: "곱셈; 증식", ety: "multi(많은) + plic(접다) + ation", cog: "multiply(곱하다), complicate(복잡하게하다)" },
+                            { e: "increase", k: "증식하다, 증식시키다", ety: "in(안에) + crease(자라다)", cog: "decrease(감소하다), create(창조하다)" },
+                            { e: "prize", k: "상", ety: "가치있는 것", cog: "price(가격)" },
+                            { e: "grant", k: "장학금", ety: "주다, 수여하다에서 유래", cog: "guarantee(보장하다)" },
+                            { e: "scholarship", k: "장학금", ety: "scholar + ship", cog: "scholar" },
+                            { e: "grantee", k: "장학금 수혜자", ety: "grant + ee(받는 사람)", cog: "employee(직원)" }
+                        ]
+                    },
+                    {
+                        root: "기타 (동기, 이동, 의지)",
+                        words: [
+                            { e: "submission", k: "복종, 순종", ety: "sub(아래로) + mit(보내다)의 명사형", cog: "submit(제출하다/복종하다), mission(임무)" },
+                            { e: "enter", k: "들어가다", ety: "안으로 가다", cog: "entrance(입구)" },
+                            { e: "entrance fee", k: "입장료", ety: "enter의 명사형(entrance) + 요금", cog: "enter(들어가다)" },
+                            { e: "exit", k: "출구", ety: "ex(밖으로) + it(가다)", cog: "transit(환승)" },
+                            { e: "eagerness", k: "열의", ety: "eager(열망하는) + ness", cog: "eager(열망하는)" },
+                            { e: "eagerly", k: "열심히, 간절히", ety: "eager + ly", cog: "eagerness(열의)" },
+                            { e: "teach", k: "교육하다, 가르치다", ety: "기본 동사", cog: "teacher(교사)" },
+                            { e: "word", k: "용어", ety: "단어, 용어", cog: "wording(표현)" },
+                            { e: "main", k: "주된", ety: "주요한", cog: "mainly(주로)" },
+                            { e: "memory", k: "기억(력), 추억", ety: "memor(기억하는) + y", cog: "remember(기억하다)" },
+                            { e: "motivation", k: "동기 부여", ety: "mot(움직이다) + ivation", cog: "motive(동기)" },
+                            { e: "keen", k: "열성적인, 간절히 ~하고자 하는", ety: "날카로운 -> 열성적인", cog: "keenly(예리하게)" },
+                            { e: "give", k: "주다", ety: "주다", cog: "forgive(용서하다)" },
+                            { e: "inspire", k: "동기를 부여하다", ety: "in(안으로) + spir(숨쉬다)", cog: "inspiration(영감)" }
+                        ]
+                    }
+                ]
+            },
+            {
+                lesson: "9강",
+                groups: [
+                    {
+                        root: "super (위), infer (아래)",
+                        words: [
+                            { e: "inferior", k: "열등한, 하위의", ety: "infer(아래) + ior(더~한)", cog: "inferiority(열등감)" },
+                            { e: "superiority", k: "우위, 우월", ety: "superior(우월한) + ity", cog: "superb(뛰어난)" },
+                            { e: "immediate superior", k: "직속상관", ety: "immediate(직접맞닿은) + superior(상관)", cog: "superior(상급의)" }
+                        ]
+                    },
+                    {
+                        root: "직업, 전문성 (Profession & Expertise)",
+                        words: [
+                            { e: "specialist", k: "전문가, 숙련가, 달인", ety: "special(특별한) + ist", cog: "special(특별한), species(종)" },
+                            { e: "expertise", k: "전문적 기술[지식]", ety: "expert(전문가) + ise", cog: "expert(전문가), experience(경험)" },
+                            { e: "professional", k: "전문적인; 전문가, 직업 선수", ety: "pro(앞에서) + fess(말하다) -> 직업적 선언", cog: "profess(공언하다), confess(고백하다)" },
+                            { e: "proficiency", k: "능숙(도)", ety: "pro(앞으로) + fic(만들다) -> 진척됨", cog: "proficient(능숙한), profit(이익)" },
+                            { e: "skilled", k: "경험이 있는, 숙달한", ety: "skill(기술) + ed", cog: "skillful(숙련된)" },
+                            { e: "inexperienced", k: "미숙한", ety: "in(부정) + experience(경험) + d", cog: "experience(경험)" },
+                            { e: "experience", k: "경험, 경험하다", ety: "ex(밖으로) + per(시도하다) -> 겪어봄", cog: "experiment(실험)" },
+                            { e: "designer", k: "건축가, 설계자", ety: "design(설계하다) + er", cog: "designate(지정하다)" },
+                            { e: "architecture", k: "건축, 건축학", ety: "arch(우두머리) + tect(짓는사람)", cog: "architect(건축가), monarch(군주)" },
+                            { e: "manufacturer", k: "제조자[사], 생산 회사", ety: "manu(손) + fact(만들다) + er", cog: "manual(수동의), factory(공장)" },
+                            { e: "vendor", k: "행상인", ety: "vend(팔다) + or", cog: "vending(판매)" },
+                            { e: "vending machine", k: "자동판매기", ety: "vending(파는) 기계", cog: "vendor(상인)" },
+                            { e: "psychology", k: "심리학", ety: "psycho(정신) + logy(학문)", cog: "psychiatrist(정신과 의사)" },
+                            { e: "counsel", k: "(전문가에 의한) 조언[충고]; 상담을 하다, 조언[충고]하다", ety: "con(함께) + sul(부르다) -> 모여서 의논", cog: "counselor(상담사), consult(상담하다)" }
+                        ]
+                    },
+                    {
+                        root: "직장, 고용, 관리 (Work & Management)",
+                        words: [
+                            { e: "occupation", k: "직업, 전문직", ety: "ob(~에 맞서) + cap(잡다) -> 차지함", cog: "occupy(차지하다), capture(잡다)" },
+                            { e: "staff", k: "전 직원, 인원", ety: "지팡이 -> 의지하는 사람들", cog: "staffing(직원배치)" },
+                            { e: "labor force", k: "노동력", ety: "labor(노동) + force(힘)", cog: "elaborate(정교한)" },
+                            { e: "junior, subordinate", k: "손아래의, 하위의", ety: "sub(아래에) + ord(순서) + inate", cog: "order(순서), ordinary(보통의)" },
+                            { e: "supervisor", k: "관리자", ety: "super(위에서) + vis(보다) + or", cog: "supervise(감독하다), vision(시야)" },
+                            { e: "supervision", k: "감독, 관리", ety: "super(위에서) + vis(보다) + ion", cog: "visible(눈에보이는)" },
+                            { e: "keep an eye on", k: "감독하다, 관리하다, 지휘하다", ety: "눈을 떼지 않다", cog: "eye(눈)" },
+                            { e: "management", k: "경영, 운영", ety: "man(손) -> 손으로 다루다", cog: "manage(관리하다), manual(설명서)" },
+                            { e: "night shift", k: "야간 근무, 야간 교대(조)", ety: "shift(교대조)", cog: "shift(이동하다)" },
+                            { e: "retirement", k: "퇴직", ety: "re(뒤로) + tire(끌다) -> 물러남", cog: "retire(은퇴하다)" }
+                        ]
+                    },
+                    {
+                        root: "절차, 급여, 성과 (Process & Reward)",
+                        words: [
+                            { e: "income", k: "봉급, 급여", ety: "in(안으로) + come(들어옴)", cog: "outcome(결과)" },
+                            { e: "pay", k: "임금, 급료", ety: "지불하다 / 임금", cog: "payment(지불)" },
+                            { e: "annual salary", k: "연봉", ety: "ann(년) + ual / salary(소금에서 유래한 급여)", cog: "anniversary(기념일)" },
+                            { e: "require", k: "필요하다", ety: "re(다시) + quir(구하다)", cog: "request(요구하다), inquire(문의하다)" },
+                            { e: "job application", k: "입사 지원서", ety: "job + application(지원)", cog: "apply(지원하다)" },
+                            { e: "apply", k: "지원하다, 신청하다", ety: "ad(~에) + plicare(접다) -> 뜻을 서면으로 냄", cog: "applicable(적용가능한)" },
+                            { e: "refuse, reject", k: "거절하다, 거부하다", ety: "re(뒤로) + ject(던지다)", cog: "inject(주입하다), project(투영하다)" },
+                            { e: "accomplishment", k: "완성, 성취", ety: "accomplish(성취하다) + ment", cog: "accomplish(이루다)" },
+                            { e: "achieve", k: "달성하다, 이루다", ety: "a(~로) + chiev(머리/끝) -> 끝맺다", cog: "achievement(성취)" },
+                            { e: "operation", k: "작동, 작용", ety: "oper(일하다) + ation", cog: "operate(작동하다), cooperate(협력하다)" },
+                            { e: "penalty", k: "벌, 벌금", ety: "poena(벌)에서 유래", cog: "penalize(처벌하다), pain(고통)" },
+                            { e: "quick", k: "신속한", ety: "빠른", cog: "quickly(빨리)" },
+                            { e: "promptly", k: "즉시, 제시간에", ety: "prompt(즉각적인) + ly", cog: "prompt(신속한)" }
+                        ]
+                    }
+                ]
+            },
+            {
+                lesson: "10강",
+                groups: [
+                    {
+                        root: "form, firm (형태, 확고함)",
+                        words: [
+                            { e: "inform", k: "통지[통보]하다", ety: "in(안에) + form(형태) -> 마음속에 모양을 만듦", cog: "information(정보), formal(공식적인)" },
+                            { e: "notification", k: "통지, 공고", ety: "not(알려진) + fic(만들다) + ation", cog: "notify(알리다), note(메모)" },
+                            { e: "confirmative", k: "확인의", ety: "con(완전히) + firm(확고한) + ative", cog: "confirm(확인하다), firm(확고한)" },
+                            { e: "confirmation", k: "확인", ety: "confirm + ation", cog: "confirm(확인하다)" }
+                        ]
+                    },
+                    {
+                        root: "tribut (할당하다), sign (표시하다)",
+                        words: [
+                            { e: "distribution", k: "분배", ety: "dis(따로) + tribut(주다) + ion", cog: "distribute(분배하다), contribute(기부하다)" },
+                            { e: "allot", k: "할당하다", ety: "ad(~에게) + lot(몫) -> 몫을 주다", cog: "lottery(복권)" },
+                            { e: "assign a task", k: "임무를 할당하다", ety: "ad(~에게) + sign(표시하다)", cog: "assign(할당하다), signature(서명)" },
+                            { e: "assignment", k: "할당; 임명; 숙제", ety: "assign + ment", cog: "design(설계하다)" },
+                            { e: "appointment", k: "임명; 약속", ety: "appoint(지정하다) + ment", cog: "appoint(임명하다)" },
+                            { e: "appoint", k: "임명하다", ety: "ad(~에) + point(점찍다)", cog: "point(점), disappoint(실망시키다)" }
+                        ]
+                    },
+                    {
+                        root: "비즈니스, 행정, 분류 (Business & Admin)",
+                        words: [
+                            { e: "base", k: "기초", ety: "바탕, 기초", cog: "basic(기초의)" },
+                            { e: "consumer price index", k: "소비자 물가 지수", ety: "consumer(소비자) + price + index", cog: "consume(소비하다)" },
+                            { e: "customer", k: "의뢰인, 고객", ety: "custom(관습적 방문) -> 단골", cog: "custom(관습), costume(의상)" },
+                            { e: "department", k: "부서", ety: "de(따로) + part(나누다) + ment", cog: "depart(출발하다), part(부분)" },
+                            { e: "compensate", k: "~을 만회하다, 보충하다", ety: "com(함께) + pend(무게달다) -> 무게를 맞추다", cog: "compensation(보상), depend(의존하다)" },
+                            { e: "separation", k: "분열", ety: "se(따로) + par(준비하다) -> 분리", cog: "separate(분리하다), prepare(준비하다)" },
+                            { e: "categorize", k: "분류하다", ety: "category(범주) + ize", cog: "category(범주)" },
+                            { e: "in detail", k: "상세히", ety: "detail(세부사항: de+tail(자르다))", cog: "tailor(재단사)" }
+                        ]
+                    },
+                    {
+                        root: "문서, 매체, 첨부 (Document & Media)",
+                        words: [
+                            { e: "copy", k: "사진 복사물", ety: "copia(풍부함) -> 복사하다", cog: "copious(풍부한)" },
+                            { e: "xerox, copy", k: "사진 복사하다", ety: "제록스(상표명) / 복사", cog: "photocopy(복사)" },
+                            { e: "pamphlet", k: "안내 소책자", ety: "작은 팜플렛", cog: "brochure(소책자)" },
+                            { e: "classified (ad)", k: "안내 광고 (구인·구직 등의 항목별 광고)", ety: "class(분류)별로 모은 광고", cog: "classify(분류하다), class(계급)" },
+                            { e: "documentary", k: "문서의; 사실을 기록한", ety: "document(문서) + ary", cog: "document(문서)" },
+                            { e: "ticket booth", k: "매표소", ety: "ticket + booth(작은 부스)", cog: "ticket(표)" },
+                            { e: "attachment", k: "애착, 지지; 부착물", ety: "attach(붙이다) + ment", cog: "attach(붙이다)" },
+                            { e: "attached", k: "첨부된, 부속의", ety: "attach(ad+tach: 못박다) + ed", cog: "detach(분리하다)" },
+                            { e: "add, adhere", k: "붙이다, 첨부하다", ety: "ad(~에) + her(붙다)", cog: "adhesive(접착제), inherent(타고난)" }
+                        ]
+                    },
+                    {
+                        root: "상태, 규칙성 (State & Regularity)",
+                        words: [
+                            { e: "decline", k: "거절하다", ety: "de(아래로) + clin(기울다) -> 고개를 젓다", cog: "incline(기울다), clinic(진료소)" },
+                            { e: "hand out", k: "분배하다", ety: "밖으로 건네주다", cog: "handout(유인물)" },
+                            { e: "on a regular basis", k: "정기적으로", ety: "regular(규칙적인) 기반으로", cog: "regular(정규의), regulate(규제하다)" },
+                            { e: "constant", k: "자주 일어나는, 빈번한", ety: "con(함께) + stans(서있는) -> 흔들림없는", cog: "stand(서다), distance(거리)" },
+                            { e: "process", k: "절차, 순서", ety: "pro(앞으로) + cess(가다)", cog: "proceed(나아가다), access(접근하다)" },
+                            { e: "rare", k: "드문, 희귀한", ety: "밀도가 낮은 -> 드문", cog: "rarely(드물게)" },
+                            { e: "stack", k: "더미", ety: "쌓아올린 것", cog: "stack(쌓다)" },
+                            { e: "commuter", k: "통근자", ety: "com(함께) + mut(바꾸다) -> 정기적 이동", cog: "commute(통근하다), mutate(변화하다)" }
+                        ]
+                    }
                 ]
             }
+        ];
+
+        let state = {
+            currentView: 'home',
+            currentLessonIndex: -1,
+            testQueue: [],
+            currentCardIndex: 0,
+            correctCount: 0,
+            incorrectQueue: []
         };
 
-        // 전역 상태 변수들
-        let currentFlatList = [];     // 현재 단원의 단어 리스트
-        let currentCardIndex = 0;     // 현재 플래시카드 인덱스
-        let isFlipped = false;        // 플래시카드 뒤집힘 상태
-        let globalWordIndex = 0;      // 아코디언 고유 ID 카운터
+        const elApp = document.getElementById('app');
+        const elHeaderTitle = document.getElementById('header-title');
+        
+        const viewHome = document.getElementById('view-home');
+        const viewLesson = document.getElementById('view-lesson');
+        const viewTest = document.getElementById('view-test');
+        const viewResult = document.getElementById('view-result');
 
-        // 사이드바 메뉴 렌더링 함수
-        function renderMenu() {
-            const menuContainer = document.getElementById('menuContainer');
-            let menuHTML = '';
+        function navigate(viewName) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.getElementById(`view-${viewName}`).classList.add('active');
+            state.currentView = viewName;
+            updateHeader();
+            window.scrollTo(0,0);
+        }
 
-            for (const book in database) {
-                menuHTML += `
-                    <div class="mb-6">
-                        <h3 class="text-[11px] font-black text-slate-400 mb-2 px-5 uppercase tracking-widest">${book}</h3>
-                        <ul class="space-y-0.5">
-                `;
+        function updateHeader() {
+            const elBtnBack = document.getElementById('btn-back');
+            const elHeaderSpacer = document.getElementById('header-spacer');
+            
+            if (state.currentView === 'home') {
+                elHeaderTitle.innerHTML = 'RootVoca <span class="text-sm font-normal text-indigo-200">고난도 완결</span>';
+                elBtnBack.style.display = 'none';
+                elHeaderSpacer.style.display = 'none';
+            } else {
+                elBtnBack.style.display = 'flex';
+                elHeaderSpacer.style.display = 'block';
                 
-                for (const lesson in database[book]) {
-                    const safeId = `menu-${book.replace(/\s+/g, '')}-${lesson.replace(/[^a-zA-Z0-9가-힣]/g, '')}`;
-                    menuHTML += `
-                        <li>
-                            <button id="${safeId}" onclick="loadLesson('${book}', '${lesson}', '${safeId}')" 
-                                class="menu-item w-full text-left px-5 py-2.5 text-sm text-slate-600 font-medium hover:bg-slate-100 transition flex items-center group">
-                                <i class="fa-solid fa-chevron-right text-[9px] mr-3 opacity-30 group-hover:opacity-70 group-hover:translate-x-1 transition-all"></i>
-                                ${lesson}
-                            </button>
-                        </li>
-                    `;
+                if (state.currentView === 'lesson') {
+                    elHeaderTitle.textContent = vocaDB[state.currentLessonIndex].lesson;
+                } else if (state.currentView === 'test') {
+                    elHeaderTitle.textContent = '테스트 진행중';
+                } else if (state.currentView === 'result') {
+                    elHeaderTitle.textContent = '학습 결과';
                 }
-                menuHTML += `</ul></div>`;
             }
-            menuContainer.innerHTML = menuHTML;
         }
 
-        // 특정 단원 로드 함수
-        function loadLesson(book, lesson, menuId) {
-            document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
-            document.getElementById(menuId).classList.add('active');
-
-            document.getElementById('currentLessonTitle').innerText = lesson;
-            document.getElementById('currentBookTitle').innerText = book;
-            document.getElementById('modeToggleBtn').classList.remove('hidden');
-
-            currentFlatList = database[book][lesson];
-            currentCardIndex = 0; 
-            globalWordIndex = 0;  
-
-            if(window.innerWidth < 768) {
-                toggleSidebar();
+        function goBack() {
+            if (state.currentView === 'lesson') {
+                navigate('home');
+            } else if (state.currentView === 'test') {
+                showModal();
+            } else if (state.currentView === 'result') {
+                navigate('home');
             }
-            renderList();
         }
 
-        // 아코디언 리스트 렌더링 함수
-        function renderList() {
-            const listView = document.getElementById('listView');
-            let htmlContent = '';
+        function showModal() {
+            const modal = document.getElementById('modal-confirm');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modal.querySelector('div').classList.remove('scale-95');
+            }, 10);
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('modal-confirm');
+            modal.classList.add('opacity-0');
+            modal.querySelector('div').classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        function confirmExit() {
+            closeModal();
+            setTimeout(() => {
+                navigate('lesson');
+            }, 300);
+        }
+
+        function renderHome() {
+            const lessonList = document.getElementById('lesson-list');
+            lessonList.innerHTML = '';
             
-            const groupedData = currentFlatList.reduce((acc, word) => {
-                if (!acc[word.group]) acc[word.group] = [];
-                acc[word.group].push(word);
-                return acc;
-            }, {});
+            vocaDB.forEach((lessonData, index) => {
+                let wordCount = 0;
+                lessonData.groups.forEach(g => wordCount += g.words.length);
 
-            for (const [groupName, groupWords] of Object.entries(groupedData)) {
-                htmlContent += `
-                    <div class="mb-6 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                        <div class="bg-blue-50 border-b border-blue-100 py-2.5 px-4 flex items-center">
-                            <div class="w-2 h-2 rounded-full bg-blue-500 mr-2"></div>
-                            <h2 class="text-sm font-bold text-blue-800">${groupName}</h2>
-                        </div>
-                        <div class="divide-y divide-slate-100">
-                `;
+                const card = document.createElement('div');
+                card.className = 'bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex justify-between items-center cursor-pointer active:bg-gray-50 transition transform active:scale-[0.98]';
+                card.onclick = () => openLessonView(index);
                 
-                groupWords.forEach((item) => {
-                    const id = `word-item-${globalWordIndex++}`;
-                    htmlContent += `
+                card.innerHTML = `
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center mr-4 text-primary font-bold text-lg">
+                            ${index + 1}
+                        </div>
                         <div>
-                            <div class="p-4 flex justify-between items-center cursor-pointer hover:bg-slate-50 transition" onclick="toggleAccordion('${id}')">
-                                <div class="pr-4">
-                                    <h3 class="text-lg font-extrabold text-slate-800">${item.word}</h3>
-                                    <p class="text-[0.9rem] font-medium text-slate-500 mt-0.5">${item.meaning}</p>
-                                </div>
-                                <div class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-400 flex-shrink-0">
-                                    <i id="icon-${id}" class="fa-solid fa-chevron-down transition-transform duration-300 text-sm"></i>
-                                </div>
+                            <h3 class="font-bold text-lg text-gray-800">${lessonData.lesson}</h3>
+                            <p class="text-gray-500 text-sm mt-0.5">어원 그룹 ${lessonData.groups.length}개</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center">
+                        <span class="bg-gray-100 text-gray-600 text-xs font-bold px-3 py-1.5 rounded-lg mr-3">${wordCount}단어</span>
+                        <i class="fas fa-chevron-right text-gray-300"></i>
+                    </div>
+                `;
+                lessonList.appendChild(card);
+            });
+        }
+
+        function openLessonView(index) {
+            state.currentLessonIndex = index;
+            const lessonData = vocaDB[index];
+            
+            document.getElementById('lesson-title-display').textContent = lessonData.lesson;
+            
+            let totalWords = 0;
+            const groupsList = document.getElementById('root-groups-list');
+            groupsList.innerHTML = '';
+            
+            let allWordsInLesson = [];
+
+            lessonData.groups.forEach(group => {
+                totalWords += group.words.length;
+                allWordsInLesson = allWordsInLesson.concat(group.words);
+
+                const groupContainer = document.createElement('div');
+                groupContainer.className = 'bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-5';
+                
+                const groupHeader = document.createElement('div');
+                groupHeader.className = 'bg-indigo-50/50 px-4 py-3 border-b border-gray-100';
+                groupHeader.innerHTML = `<h3 class="font-bold text-primary text-sm uppercase tracking-wide"><i class="fas fa-project-diagram mr-2 opacity-50"></i>${group.root}</h3>`;
+                groupContainer.appendChild(groupHeader);
+
+                const wordListContainer = document.createElement('div');
+                wordListContainer.className = 'divide-y divide-gray-50';
+
+                group.words.forEach(word => {
+                    const wordEl = document.createElement('div');
+                    wordEl.className = 'p-4 hover:bg-gray-50 transition';
+                    wordEl.innerHTML = `
+                        <div class="flex justify-between items-end mb-1">
+                            <h4 class="text-lg font-bold text-gray-800 font-eng leading-tight">${word.e}</h4>
+                        </div>
+                        <p class="text-gray-700 font-medium text-sm mb-3">${word.k}</p>
+                        <div class="space-y-2">
+                            <div class="bg-indigo-50/50 p-2.5 rounded-lg border border-indigo-50 flex items-start">
+                                <span class="bg-indigo-100 text-indigo-600 text-[10px] font-bold px-1.5 py-0.5 rounded mr-2 whitespace-nowrap mt-0.5">어원</span>
+                                <p class="text-xs text-gray-600 leading-snug break-keep">${word.ety}</p>
                             </div>
-                            
-                            <div id="content-${id}" class="accordion-content bg-slate-50 px-5 border-t border-slate-100">
-                                <div class="mb-2">
-                                    <span class="inline-block bg-emerald-100 text-emerald-800 text-[10px] px-2 py-1 rounded-md font-bold mb-1.5 uppercase tracking-wide"><i class="fa-solid fa-seedling mr-1"></i> 메타인지 어원</span>
-                                    <p class="text-[0.85rem] text-slate-700 leading-relaxed font-medium break-keep">${item.root}</p>
-                                </div>
-                                <div>
-                                    <span class="inline-block bg-blue-100 text-blue-800 text-[10px] px-2 py-1 rounded-md font-bold mb-1.5 uppercase tracking-wide"><i class="fa-solid fa-link mr-1"></i> 동계어 (Family)</span>
-                                    <p class="text-[0.85rem] text-slate-500 font-medium">${item.cognates}</p>
-                                </div>
+                            <div class="bg-emerald-50/50 p-2.5 rounded-lg border border-emerald-50 flex items-start">
+                                <span class="bg-emerald-100 text-emerald-600 text-[10px] font-bold px-1.5 py-0.5 rounded mr-2 whitespace-nowrap mt-0.5">동계어</span>
+                                <p class="text-xs text-gray-600 leading-snug break-keep">${word.cog}</p>
                             </div>
                         </div>
                     `;
+                    wordListContainer.appendChild(wordEl);
                 });
-                htmlContent += `</div></div>`;
-            }
-            listView.innerHTML = htmlContent;
-            updateFlashcard();
+
+                groupContainer.appendChild(wordListContainer);
+                groupsList.appendChild(groupContainer);
+            });
+
+            document.getElementById('lesson-word-count').textContent = `총 ${totalWords}단어`;
+            document.getElementById('btn-start-test').onclick = () => startTest(allWordsInLesson);
+            
+            navigate('lesson');
         }
 
-        // 아코디언 토글
-        function toggleAccordion(id) {
-            const content = document.getElementById(`content-${id}`);
-            const icon = document.getElementById(`icon-${id}`);
-            if (content.classList.contains('open')) {
-                content.classList.remove('open');
-                icon.classList.remove('rotate-180');
-            } else {
-                content.classList.add('open');
-                icon.classList.add('rotate-180');
+        function shuffleArray(array) {
+            let shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
             }
+            return shuffled;
         }
 
-        // 사이드바 토글
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('sidebarOverlay');
-            if (sidebar.classList.contains('open')) {
-                sidebar.classList.remove('open');
-                overlay.classList.add('hidden');
-            } else {
-                sidebar.classList.add('open');
-                overlay.classList.remove('hidden');
-            }
+        function startTest(wordsArray) {
+            state.testQueue = shuffleArray(wordsArray);
+            state.currentCardIndex = 0;
+            state.correctCount = 0;
+            state.incorrectQueue = [];
+            
+            navigate('test');
+            renderFlashcard();
         }
 
-        // 플래시카드 모드 토글
-        function toggleFlashcardMode() {
-            if(currentFlatList.length === 0) return;
-            
-            const flashcardView = document.getElementById('flashcardView');
-            const modeBtn = document.getElementById('modeToggleBtn');
-            const listView = document.getElementById('listView');
-            
-            if (flashcardView.classList.contains('hidden')) {
-                flashcardView.classList.remove('hidden');
-                flashcardView.classList.add('flex');
-                listView.classList.add('hidden');
-                modeBtn.innerHTML = '<i class="fa-solid fa-list mr-1"></i> 목록보기';
-                updateFlashcard();
-            } else {
-                flashcardView.classList.add('hidden');
-                flashcardView.classList.remove('flex');
-                listView.classList.remove('hidden');
-                modeBtn.innerHTML = '<i class="fa-solid fa-clone mr-1"></i> 카드모드';
+        function retryTest() {
+            if (state.incorrectQueue.length === 0) {
+                showAlertModal();
+                return;
             }
+            startTest(state.incorrectQueue);
         }
 
-        // 플래시카드 내용 갱신
-        function updateFlashcard() {
-            if(currentFlatList.length === 0) return;
-            const item = currentFlatList[currentCardIndex];
-            
-            document.getElementById('cardGroup').innerText = item.group;
-            document.getElementById('cardWord').innerText = item.word;
-            document.getElementById('cardWordBack').innerText = item.word;
-            document.getElementById('cardMeaning').innerText = item.meaning;
-            document.getElementById('cardRoot').innerText = item.root;
-            document.getElementById('cardCognates').innerText = item.cognates;
-            
-            document.getElementById('flashcardCounter').innerText = `${currentCardIndex + 1} / ${currentFlatList.length}`;
-            
-            if(isFlipped) {
-                document.getElementById('flashcard').classList.remove('rotate-y-180');
-                isFlipped = false;
-            }
+        function showAlertModal() {
+            const modal = document.getElementById('modal-alert');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modal.querySelector('div').classList.remove('scale-95');
+            }, 10);
         }
 
-        // 카드 뒤집기
+        function closeAlertModal() {
+            const modal = document.getElementById('modal-alert');
+            modal.classList.add('opacity-0');
+            modal.querySelector('div').classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        function renderFlashcard() {
+            const word = state.testQueue[state.currentCardIndex];
+            const flashcard = document.getElementById('flashcard');
+            
+            flashcard.classList.remove('is-flipped');
+            
+            const controls = document.getElementById('test-controls');
+            controls.style.opacity = '0.4';
+            controls.style.pointerEvents = 'none';
+
+            setTimeout(() => {
+                document.getElementById('card-en').textContent = word.e;
+                document.getElementById('card-ko').textContent = word.k;
+                document.getElementById('card-ety').textContent = word.ety;
+                document.getElementById('card-cog').textContent = word.cog;
+            }, 150);
+
+            const progressPct = ((state.currentCardIndex) / state.testQueue.length) * 100;
+            document.getElementById('test-progress-bar').style.width = `${progressPct}%`;
+            document.getElementById('test-progress-text').textContent = `${state.currentCardIndex + 1} / ${state.testQueue.length}`;
+        }
+
         function flipCard() {
-            const card = document.getElementById('flashcard');
-            isFlipped = !isFlipped;
-            card.classList.toggle('rotate-y-180');
+            const flashcard = document.getElementById('flashcard');
+            if (!flashcard.classList.contains('is-flipped')) {
+                flashcard.classList.add('is-flipped');
+                const controls = document.getElementById('test-controls');
+                controls.style.opacity = '1';
+                controls.style.pointerEvents = 'auto';
+            }
         }
 
-        // 카드 이동 (이전/다음)
-        function prevCard() {
-            currentCardIndex = (currentCardIndex > 0) ? currentCardIndex - 1 : currentFlatList.length - 1;
-            updateFlashcard();
+        function handleAnswer(isCorrect) {
+            const currentWord = state.testQueue[state.currentCardIndex];
+            
+            if (isCorrect) {
+                state.correctCount++;
+            } else {
+                state.incorrectQueue.push(currentWord);
+            }
+
+            state.currentCardIndex++;
+
+            if (state.currentCardIndex >= state.testQueue.length) {
+                document.getElementById('test-progress-bar').style.width = '100%';
+                document.getElementById('test-progress-text').textContent = `${state.testQueue.length} / ${state.testQueue.length}`;
+                setTimeout(() => {
+                    showResults();
+                }, 400);
+            } else {
+                renderFlashcard();
+            }
         }
 
-        function nextCard() {
-            currentCardIndex = (currentCardIndex < currentFlatList.length - 1) ? currentCardIndex + 1 : 0;
-            updateFlashcard();
+        function showResults() {
+            document.getElementById('result-correct').textContent = state.correctCount;
+            document.getElementById('result-incorrect').textContent = state.testQueue.length - state.correctCount;
+            navigate('result');
         }
 
-        // 초기 실행
+        function goHome() {
+            navigate('home');
+        }
+
         window.onload = () => {
-            renderMenu();
-            // loadLesson("중등 고난도", "1강 (가족/관계)", "menu-중등고난도-1강가족관계");
+            renderHome();
+            navigate('home');
         };
+
     </script>
 </body>
 </html>
